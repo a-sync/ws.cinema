@@ -67,7 +67,7 @@ body>div{
 	</head>
 	<body>
 	<div>
-			<canvas id="logo" width="50px" height="50px"></canvas><br>
+            <video width="1280" id="the-video" src="" poster="http://media2.giphy.com/media/FiGiRei2ICzzG/giphy.webp"></video>
 			<div id="chat_cont">
 				<div>
 					<div>Username:&nbsp;<span id="username"></span></div>
@@ -78,6 +78,7 @@ body>div{
 					<div id="chat_users"></div>
 					<div id="chat_channels"></div> 
 				</div>
+				<div id="chat-tooltip-container"><div id="chat-tooltip"></div></div>
 				<div>
 					<input id="chat_input" type="text">&nbsp;<button style="" type="button" class="btn btn-primary btn-xs" onclick="javascript:sendChat()">SEND</button>
 					<button style="" type="button" class="btn btn-warning btn-xs" onclick="javascript:sendSync()">SYNC</button>
