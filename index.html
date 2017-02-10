@@ -396,6 +396,7 @@ function sendChat(){
             }
             if(TheVideoController.video) {
                 TheVideoController.snap(q);
+                console.log(TheVideoController.snapDataUrl);
                 if(TheVideoController.snapDataUrl !== null) {
                     var to_send = {bc:'achexchatdemo', snap: escape(TheVideoController.snapDataUrl) };
                     $.achex.send(to_send);
@@ -403,7 +404,7 @@ function sendChat(){
             } else htmlToSelf('No video loaded...');
         }
         else if(str === '/help') {
-            var cmds = 'Available commands: help name nick clear cls gif setvideo video sync getvideo snap setbg 0-'+(backgroundCs.length-1);
+            var cmds = 'Available commands: help, name, nick, clear, cls, gif, setvideo, video, sync, getvideo, snap, setbg 0-'+(backgroundCs.length-1);
             htmlToSelf(cmds);
         }
         else {
@@ -776,8 +777,8 @@ var TheVideoController = {
 		this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
 			TheVideoController.h = this.videoHeight;
-			TheVideoController.canvas.width = this.w;
-			TheVideoController.canvas.height = this.h;
+			TheVideoController.canvas.width = TheVideoController.w;
+			TheVideoController.canvas.height = TheVideoController.h;
 			TheVideoController.duration = this.duration;
 		};
 		
@@ -817,7 +818,7 @@ var TheVideoController = {
         if(!q || q > 100 || q < 1) q = 60;
         this.context.fillRect(0, 0, this.w, this.h);
         this.context.drawImage(this.video, 0, 0, this.w, this.h);
-        this.snapDataUrl = this.canvas.toDataURL('image/png');//q/100
+        this.snapDataUrl = this.canvas.toDataURL('image/jpeg',q/100);
     },
     
     syncToMaster: function (src, paused, time, ended, volume, muted) {
