@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="cinema_bg">
 	<head>
 		<title>WebSocket Video Sync</title>
 
@@ -10,25 +10,48 @@
 
 		<link rel="icon" href="favicon.png">
 		<link rel="apple-touch-icon" href="favicon.png">
-		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+		<link rel="stylesheet" href="bootstrap.min.css">
 		<script src="JQ.js"></script>
 		<!-- <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
 		<script src="jquery.achexws.js"></script>
+		<script>
+var backgroundCs = [
+    {cname:'cinema_bg'},
+    {cname:'brokkoli_bg'},
+    {cname:'cosmos_bg'},
+    {cname:'black-scales_bg'},
+    {cname:'diagmonds_bg'}
+];
+function setBg(newBgNum) {
+    if( typeof(window.localStorage.currBg) === 'undefined' 
+        || isNaN(window.localStorage.currBg) 
+        || typeof(backgroundCs[window.localStorage.currBg]) !== 'object') {
+        
+        window.localStorage.currBg = 0;
+    }
+
+    if(isNaN(newBgNum) || typeof(backgroundCs[newBgNum]) !== 'object') {
+        newBgNum = window.localStorage.currBg;
+    }
+    else window.localStorage.currBg = newBgNum;
+
+    document.getElementsByTagName('html')[0].className = backgroundCs[newBgNum].cname;
+}
+		</script>
 <style>
-html,body{
-background-image:url('cinema.jpg');
-    background-repeat: repeat-x;
-    background-position: center -150px;
-    background-size: 1480px auto;
-    background-color: black;
+html{
+    background-color: #000;
     color: #ededed;
+}
+body{
+background: none transparent;
+color: #ededed;
 }
 #the-video {
 position: relative;
-top: 84px;
-right: 20px;
-background-color: #000;
-box-shadow: 0 0 8px 2px rgba(0,0,0,0.8);
+top: 35px;
+background-color: rgba(0,0,0,0.92);
+box-shadow: 0 0 10px 2px rgba(0,0,0,0.8);
 }
 #logo{
 vertical-align: bottom;
@@ -50,6 +73,9 @@ padding: 5px;
 }
 .msg a:visited {
     color: #09d;
+}
+.sys-msg {
+    color: #baf;
 }
 
 #chat_cont{
@@ -87,7 +113,7 @@ padding: 5px;
 }
 #chat_window>div{
 display: inline-block;
-background: linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(0,0,0,0.80) 100%); 
+background: linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%); 
 border-radius:7px;
 box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
 padding: 5px;
@@ -102,7 +128,7 @@ max-height: 400px;
 vertical-align: bottom;
 }
 #chat_users>div{
-background:linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(0,0,0,0.80) 100%); 
+background:linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%); 
 padding: 5px;
 border-radius:7px;
 box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
@@ -119,15 +145,21 @@ text-align: right;
 padding-top: 5px;
 }
 #chat_input{
-background:rgba(0,0,0,0.6);
+background:rgba(20,20,20,0.6);
 border:0;
 border-radius:7px;
 outline: 0 none;
 width: 400px;
 padding: 5px;
+color: #ededed;
 }
+#chat_input:focus,
+#chat_input:active {
+    box-shadow: 0 0 16px -2px rgba(0, 125, 255, 0.8);
+}
+
 #log{
-color:#555;
+color:#b55;
 text-align:center;
 }
 body>div{
@@ -135,14 +167,14 @@ body>div{
 	text-align:center;
 }
 #chat-tooltip-container {
-    background:rgba(0,0,0,0.6);
+    background:rgba(20,20,20,0.6);
     max-height: 310px;
     border-radius:7px;
     overflow-y: auto;
     display: block !important;
     position: fixed;
     bottom: 40px;
-    box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
+    box-shadow: 0 0 16px -2px rgba(0,0,0,0.8);
     padding: 5px;
 }
 #chat-tooltip {
@@ -169,12 +201,41 @@ background-repeat: no-repeat;
 background-position: center center;
 min-height: 40px;
 }
+.cinema_bg{
+background-image:url('cinema.jpg');
+background-repeat: no-repeat;
+background-position: center -188px;
+background-size: 2100px auto;
+}
+.brokkoli_bg{
+background-image:url('brokkoli.jpg');
+background-repeat: no-repeat;
+background-position: center top;
+background-size: cover;
+}
+.cosmos_bg{
+background-image:url('cosmos.jpg');
+background-repeat: no-repeat;
+background-position: center top;
+background-size: cover;
+}
+.black-scales_bg{
+background-image:url('black-scales.png');
+background-repeat: repeat;
+background-position: center center;
+}
+.diagmonds_bg{
+background-image:url('diagmonds.png');
+background-repeat: repeat;
+background-position: center center;
+}
 </style>
 	</head>
-	<body>
+	<body onload="setBg();">
 	<div id="main-content">
-            <video width="1280" height="720" id="the-video" src="" poster="http://media2.giphy.com/media/142xSjESUD0nba/giphy.webp"></video>
+            <video width="1280" height="720" id="the-video" src="" poster=""></video>
             <!-- countdown: OoVaSYA6NqQrC -->
+            <!-- http://media2.giphy.com/media/142xSjESUD0nba/giphy.webp -->
 			<div id="chat_cont" onclick="input.focus();">
 				<div>
 					<div id="username-container">Username:&nbsp;<span id="username"></span></div>
@@ -187,9 +248,10 @@ min-height: 40px;
 				</div>
 				<div id="chat-tooltip-container"><div id="chat-tooltip"></div></div>
 				<div id="chat-input-container">
-                        <input id="chat_input" type="text">&nbsp;<button style="" type="button" class="btn btn-primary btn-xs" onclick="javascript:sendChat()">SEND</button>
-                        <button style="" type="button" class="btn btn-info btn-xs" onclick="javascript:clearChatWindow()">CLEAR</button>
-                        <button style="" type="button" class="btn btn-warning btn-xs" onclick="javascript:sendSync()">SYNC</button>
+                    
+                    <input id="chat_input" type="text">&nbsp;<button type="button" class="btn btn-primary btn-xs" onclick="javascript:sendChat()">SEND</button>
+                    <button type="button" class="btn btn-danger btn-xs" onclick="javascript:clearChatWindow()">CLEAR</button>
+                    <button type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()">SET VIDEO</button>
 				</div>
 			</div>
 	</div>
@@ -231,7 +293,7 @@ function cc(){
 var refreshTimeout = null;
 function chatEvent(obj, raw){
 	//logf(raw);
-	//console.log(obj);
+	//console.log(obj, raw);
 	//var gaga = JSON.parse(raw);
 	if(obj.bc == 'achexchatdemo'){
 		if( obj.channel == channel && channel != '' ){
@@ -241,7 +303,7 @@ function chatEvent(obj, raw){
             if(obj.online != null) {
 			    users = [];
 			    clearTimeout(refreshTimeout);
-			    refreshTimeout = setTimeout(refreshUserList, 30000);
+			    refreshTimeout = setTimeout(refreshUserList, 60000);
 			}
 			// in channel info
 			$.achex.send({bc:'achexchatdemo', inchannel: channel});
@@ -249,14 +311,26 @@ function chatEvent(obj, raw){
             if(users[obj.sID] == null){
                 users[obj.sID]  = {c:String(obj.FROM)};
             }
-		}else if(obj.videoState != null) {
-            console.log('videoState', obj);
 		}else if(obj.gif != null) {
             var type = obj.gif.slice(-9);
             if(type === '/100.webp') {
                 obj.gif = obj.gif.slice(0, obj.gif.length-9)+'/200.webp';
             }
-            rcvChat(obj, '<img height="200" src="'+obj.gif+'" class="loading" />');
+            rcvChat(obj, '<img width="'+(obj.width*2)+'" height="'+(obj.height*2)+'" src="'+obj.gif+'" class="loading" />');
+		}
+		else if(obj.videoSrc != null) {
+            TheVideoController.init('the-video');
+            if(TheVideoController.video.currentSrc != unescape(obj.videoSrc)) {
+                TheVideoController.video.src = unescape(obj.videoSrc);
+                TheVideoController.video.load();
+            }
+		}
+		else if(obj.snap != null) {
+            rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="loading" />');
+		}
+		else if(obj.videoCurrSrc != null && obj.sID != $.achex.sid) {
+            TheVideoController.syncToMaster(unescape(obj.videoCurrSrc), obj.videoPaused, obj.videoCurrTime, obj.videoEnded, obj.videoVolume, obj.videoMuted);
+            //console.log('videoCurrSrc', obj);
 		}
 		
 		showUsers();
@@ -290,6 +364,48 @@ function sendChat(){
         if(str === '/clear' || str ==='/cls') {
             clearChatWindow();
         }
+        else if(str === '/name' || str === '/nick') {
+            username = prompt('Enter Username').replace(/\W+/g, "");
+            window.localStorage.username = username;
+        }
+        else if(str === '/setvideo' || str === '/video') {
+            setVideo();
+        }
+        else if(str === '/getvideo') {
+            var videoSrc = $('#the-video').currentSrc;//.attr('src');
+            htmlToSelf(escape(videoSrc || '*no video source set*'));
+        }
+        else if(str === '/sync') {
+            if(!TheVideoController.master && TheVideoController.video != null) {
+                TheVideoController.master = true;
+                setSync(true);
+                htmlToSelf('Entered master mode...');
+            }
+            else {
+                TheVideoController.master = false;
+                htmlToSelf('Exited master mode...');
+            }
+        }
+        else if(str.slice(0, 7) === '/setbg ' && !isNaN(str.split(' ')[1])) {
+            setBg(parseInt(str.split(' ')[1]));
+        }
+        else if(str === '/snap') {
+            var q = null;
+            if(str.indexOf('/snap ') === 0 && str.length > 6) {
+                if(!isNaN(str.split(' ')[1])) q = str.split(' ')[1];
+            }
+            if(TheVideoController.video) {
+                TheVideoController.snap(q);
+                if(TheVideoController.snapDataUrl !== null) {
+                    var to_send = {bc:'achexchatdemo', snap: escape(TheVideoController.snapDataUrl) };
+                    $.achex.send(to_send);
+                }
+            } else htmlToSelf('No video loaded...');
+        }
+        else if(str === '/help') {
+            var cmds = 'Available commands: help name nick clear cls gif setvideo video sync getvideo snap setbg 0-'+(backgroundCs.length-1);
+            htmlToSelf(cmds);
+        }
         else {
             var to_send = {bc:'achexchatdemo', channel: channel, msg : escape(str) };
             $.achex.send(to_send);
@@ -297,6 +413,11 @@ function sendChat(){
         }
 		input.value= '';
 	}
+}
+
+function htmlToSelf(html) {
+    var obj = {FROM:$.achex.username, sID:$.achex.sid};
+    rcvChat(obj, '<i class="sys-msg">'+html+'</i>');
 }
 
 function setChannel(chan){
@@ -449,16 +570,6 @@ function refreshUserList() {
     $.achex.send({bc:'achexchatdemo', online: username, req:'info'});
 }
 
-function sendSync(){
-	var videoState = 'playing';
-	var videoTime = '0:0:22';
-	if(channel != null){
-		var to_send = {bc:'achexchatdemo', videoState: videoState, videoTime: videoTime };
-		$.achex.send(to_send);
-		console.log(to_send);
-	}
-}
-
 function clearChatWindow() {
     $('#chat_window').html('');
     lastUser = null;
@@ -606,6 +717,137 @@ function sendGif(img) {
 	}
 }
 
+function setVideo() {
+    var videoSrc = prompt('Insert video source URL', 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4');
+    if(videoSrc.length > 10 && videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://') {
+        var to_send = {bc:'achexchatdemo', videoSrc: escape(videoSrc.trim()) };
+		$.achex.send(to_send);
+    }
+}
+
+function setSync(force){
+	//if(TheVideoController.master){
+	if(force || (TheVideoController.video && !TheVideoController.ignoreEvents)){
+		var to_send = {
+            bc:'achexchatdemo', 
+            videoCurrSrc: escape(TheVideoController.video.currentSrc),
+            videoPaused: TheVideoController.video.paused, 
+            videoCurrTime: TheVideoController.video.currentTime,
+            videoEnded: TheVideoController.video.ended,
+            videoVolume: TheVideoController.video.volume,
+            videoMuted: TheVideoController.video.muted
+		};
+		$.achex.send(to_send);
+		//console.log('setSync', to_send);
+	}
+}
+
+// ## THE-VIDEO ##
+
+var TheVideoController = {
+    video: null,
+    canvas:null,
+    w:null,
+    h:null,
+    duration:null,
+    snapDataUrl:null,
+    master: false,
+    ignoreEvents: false,
+    ignoreEventsTimer: null,
+    ignoreDelay: 2000,
+    
+    init: function(videoId) {
+		this.video = document.getElementById(videoId);
+		this.canvas = document.createElement('CANVAS');
+		this.context = this.canvas.getContext('2d');
+
+		this.addListeners();
+	},
+
+	addListeners: function() {
+		this.video.onmouseover = function (e) {
+            this.setAttribute("controls", "controls");
+        };
+        //this.video.onmousemove = this.video.onmouseover;
+        this.video.onmouseout = function (e) {
+            this.removeAttribute("controls");
+        };
+	
+		this.video.onloadedmetadata = function(e) {
+            TheVideoController.w = this.videoWidth;
+			TheVideoController.h = this.videoHeight;
+			TheVideoController.canvas.width = this.w;
+			TheVideoController.canvas.height = this.h;
+			TheVideoController.duration = this.duration;
+		};
+		
+		//this.video.oncanplaythrough = function(e) {
+        //  //console.log('oncanplaythrough');
+		//};
+		
+		//this.video.onended = function(e) {
+        //  //console.log('onended');
+		//};
+		
+		this.video.onpause = function(e) {
+            //console.log('onpause');
+            setSync();
+		};
+		//this.video.onplay = function(e) {
+        //    console.log('onplay');
+		//};
+		
+		this.video.onplaying  = function(e) {
+            //console.log('onplaying');
+            setSync();
+		};
+		
+		this.video.onseeked  = function(e) {
+            //console.log('onseeked');
+            setSync();
+		};
+
+		this.video.onwaiting  = function(e) {
+            //console.log('onwaiting');
+            //TODO: send msg: buffering...
+		};
+	},
+
+    snap: function (q) {
+        if(!q || q > 100 || q < 1) q = 60;
+        this.context.fillRect(0, 0, this.w, this.h);
+        this.context.drawImage(this.video, 0, 0, this.w, this.h);
+        this.snapDataUrl = this.canvas.toDataURL('image/png');//q/100
+    },
+    
+    syncToMaster: function (src, paused, time, ended, volume, muted) {
+        //console.log(src, paused, time, ended, volume, muted);
+        if(this.master) return;
+        
+        this.ignoreEvents = true;
+        if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
+        this.ignoreEventsTimer = setTimeout(function(){
+            TheVideoController.ignoreEvents = false;
+        }, this.ignoreDelay);
+
+        if(TheVideoController.video == null) TheVideoController.init('the-video');
+        if(TheVideoController.video.currentSrc != src) {
+            TheVideoController.video.src = src;
+            TheVideoController.video.load();
+        }
+
+        if(TheVideoController.video.paused !== paused) {
+            if(!paused && (TheVideoController.paused || !TheVideoController.ended)) TheVideoController.video.play();
+            else if(paused) TheVideoController.video.pause();
+        }
+
+        console.log(TheVideoController.video.currentTime, time);
+        TheVideoController.video.currentTime = time;
+
+        //TheVideoController.video.volume = volume;
+        //TheVideoController.video.muted = muted;
+    }
+};
 
 </script>
         
