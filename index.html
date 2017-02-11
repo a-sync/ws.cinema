@@ -278,7 +278,7 @@ while(username == ''){
 }
 $('#username').html(username);
 
-var channel = 'btorrent-movie';
+var channel = 'ws-video-sync';
 if(typeof btorrentChannelName === 'string') channel = btorrentChannelName;
 
 function oc(e){
@@ -453,7 +453,7 @@ function sendWhisper(usr, str){
 }
 
 function rcvChat(obj, html){
-    if(lastUser != obj.sID) $('#chat_window').append('<br>').append(createChatMessage(obj, html));
+    if(lastUser != obj.sID) $('#chat_window').append(createChatMessage(obj, html));
 	else $('#chat_window>div:last-child').append('<br>').append(createChatMessage(obj, html));
 	input.scroll = input.scrollHeight;
 }
@@ -771,8 +771,8 @@ function sendGif(img) {
 }
 
 function setVideo() {
-    var videoSrc = prompt('Insert video source URL', 'http://clips.vorwaerts-gmbh.de/VfE_html5.mp4');
-    if(videoSrc.length > 10 && videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://') {
+    var videoSrc = prompt('Insert video source URL', 'http://webtorrent.io/torrents/sintel-1024-surround.mp4');//http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
+    if(videoSrc !== null && videoSrc.length > 10 && videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://') {
         var to_send = {bc:'achexchatdemo', videoSrc: escape(videoSrc.trim()) };
 		$.achex.send(to_send);
     }
@@ -825,7 +825,12 @@ var TheVideoController = {
         this.video.onmouseout = function (e) {
             this.removeAttribute("controls");
         };
-	
+        
+        this.video.ondblclick = function (e) {
+            if(TheVideoController.video.paused) TheVideoController.video.play();
+            else TheVideoController.video.pause();
+        }
+        
 		this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
 			TheVideoController.h = this.videoHeight;
@@ -896,7 +901,7 @@ var TheVideoController = {
         }
 
         if(TheVideoController.video.paused !== paused) {
-            if(!paused && (TheVideoController.paused || !TheVideoController.ended)) TheVideoController.video.play();
+            if(!paused && (TheVideoController.video.paused || !TheVideoController.video.ended)) TheVideoController.video.play();
             else if(paused) TheVideoController.video.pause();
         }
 
@@ -931,6 +936,6 @@ function setPoster(n) {
 </script>
         
         
-        
+        <!-- src @ github.com/a-sync/ws-video-sync -->
 	</body>
 </html>
