@@ -64,6 +64,7 @@ text-decoration: underline;
 .msg{
 color:#ededed;
 padding: 5px;
+display: inline-block;
 }
 .msg a {
     color: #2cf;
@@ -106,8 +107,6 @@ padding: 5px;
 }
 
 #chat_window{
-max-height: 400px;
-overflow-y:auto;
 text-align:right;
 padding: 5px;
 }
@@ -121,6 +120,9 @@ margin-top: 5px;
 vertical-align: bottom;
 max-width: 400px;
 word-wrap: break-word;
+}
+.msg img {
+max-width: 380px;
 }
 #chat_users{
 overflow-y:auto;
@@ -325,7 +327,7 @@ function chatEvent(obj, raw){
             if(type === '/100.webp') {
                 obj.gif = obj.gif.slice(0, obj.gif.length-9)+'/200.webp';
             }
-            rcvChat(obj, '<img width="'+(obj.width*2)+'" height="'+(obj.height*2)+'" src="'+obj.gif+'" class="loading" />');
+            rcvChat(obj, '<img width="'+(obj.width*2)+'" src="'+obj.gif+'" class="msg-gif loading" />');
 		}
 		else if(obj.videoSrc != null) {
             TheVideoController.init('the-video');
@@ -335,7 +337,7 @@ function chatEvent(obj, raw){
             }
 		}
 		else if(obj.snap != null) {
-            rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="loading" />');
+            rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" />');
 		}
 		else if(obj.videoCurrSrc != null && obj.sID != $.achex.sid) {
             TheVideoController.syncToMaster(unescape(obj.videoCurrSrc), obj.videoPaused, obj.videoCurrTime, obj.videoEnded, obj.videoVolume, obj.videoMuted);
