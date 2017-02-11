@@ -339,8 +339,8 @@ function chatEvent(obj, raw){
 		else if(obj.snap != null) {
             rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" />');
 		}
-		else if(obj.videoCurrSrc != null && obj.sID != $.achex.sid) {
-            TheVideoController.syncToMaster(unescape(obj.videoCurrSrc), obj.videoPaused, obj.videoCurrTime, obj.videoEnded, obj.videoVolume, obj.videoMuted);
+		else if(obj.videoCurrSrc != null) {
+            TheVideoController.syncToMaster(obj);
             //console.log('videoCurrSrc', obj);
 		}
 		else if(obj.poster != null) {
@@ -381,6 +381,8 @@ function sendChat(){
         else if(str === '/name' || str === '/nick') {
             username = prompt('Enter Username').replace(/\W+/g, "");
             window.localStorage.username = username;
+            window.location.reload();
+            //TODO: reauth to server to get new name without reloading
         }
         else if(str === '/setvideo' || str === '/video') {
             setVideo();
@@ -390,7 +392,26 @@ function sendChat(){
             var c = !videoSrc?'No video source set.':escape(videoSrc);
             htmlToSelf(c);
         }
-        else if(str === '/sync') {
+        else if(str === '/play' || str === '/pause' || str === '/p') {
+            if(TheVideoController.video.paused) {
+                if(str === '/play' || str === '/p') TheVideoController.video.play();
+            }
+            else {
+                if(str === '/pause' || str === '/p') TheVideoController.video.pause();
+            }
+        }
+        else if(str === '/mute' || str === '/unmute' || str === '/m') {
+            if(!TheVideoController.video.muted) {
+                if(str === '/mute' || str === '/m') TheVideoController.video.muted = true;
+            }
+            else {
+                if(str === '/unmute' || str === '/m') TheVideoController.video.muted = false;
+            }
+        }
+        else if(str === '/fs') {
+            TheVideoController.toggleFullScreen();
+        }
+        else if(str === '/master') {
             if(!TheVideoController.master && TheVideoController.video != null) {
                 TheVideoController.master = true;
                 setSync(true);
@@ -421,10 +442,17 @@ function sendChat(){
             } else htmlToSelf('No video loaded...');
         }
         else if(str === '/help' || str === '/man') {
-            var cmds = 'Available commands: <br>/help, /man '
-                      +'<br>/clear, /cls '
+            var cmds = 'Available commands: <br><b>/help, /man</b> '
+                      +'<br><b>/clear, /cls</b> (clear screen)'
                       +'<br>/name, /nick '
                       +'<br>/setvideo, /video '
+                      +'<br>/play '
+                      +'<br>/pause '
+                      +'<br>/p '
+                      +'<br>/mute '
+                      +'<br>/unmute '
+                      +'<br>/m '
+                      +'<br>/fs '
                       +'<br>/getvideo '
                       +'<br>/setbg 0-'+(backgroundCs.length-1)+' '
                       +'<br>/setposter 0-'+(posterPs.length-1)+' '
@@ -432,7 +460,7 @@ function sendChat(){
                       +'<br>/giflate ?text '
                       +'<br>/sticker %search '
                       +'<br>/sticklate ?text '
-                    //+'<br>/sync '
+                    //+'<br>/master '
                     //+'<br>/snap %quality=60'
                       ;
             htmlToSelf(cmds);
@@ -497,7 +525,7 @@ function createChatMessage(obj, html){
 	if(obj.time != null){
 		var time = document.createElement('span');
 		time.innerHTML = obj.time;
-		time.className = 'time';
+		time.className = 'msg-time';
 	}
 	//TODO: send timestamp
 
@@ -785,11 +813,13 @@ function setVideo() {
     }
 }
 
+var lastSyncTimeStamp = 0;
 function setSync(force){
-	//if(TheVideoController.master){
+	//TODO: make use of TheVideoController.master
 	if(force || (TheVideoController.video && !TheVideoController.ignoreEvents)){
 		var to_send = {
             bc:'achexchatdemo', 
+            timestamp: Date.now(),
             videoCurrSrc: escape(TheVideoController.video.currentSrc),
             videoPaused: TheVideoController.video.paused, 
             videoCurrTime: TheVideoController.video.currentTime,
@@ -797,6 +827,7 @@ function setSync(force){
             videoVolume: TheVideoController.video.volume,
             videoMuted: TheVideoController.video.muted
 		};
+		lastSyncTimeStamp = to_send.timestamp;
 		$.achex.send(to_send);
 		//console.log('setSync', to_send);
 	}
@@ -815,7 +846,7 @@ var TheVideoController = {
     ignoreEvents: false,
     ignoreEventsTimer: null,
     ignoreDelay: 2000,
-    
+    //TODO: seekThreshold: 1, //seconds
     init: function(videoId) {
 		this.video = document.getElementById(videoId);
 		this.canvas = document.createElement('CANVAS');
@@ -894,10 +925,20 @@ var TheVideoController = {
         }
     },
     
-    syncToMaster: function (src, paused, time, ended, volume, muted) {
-        //console.log(src, paused, time, ended, volume, muted);
-        if(this.master) return;
-        
+    syncToMaster: function (obj) {
+        if(this.master || obj.sID == $.achex.sid) return;
+
+        if(!isNaN(lastSyncTimeStamp) && obj.timestamp < lastSyncTimeStamp) return;
+
+        var src = unescape(obj.videoCurrSrc);
+        var timestamp = obj.timestamp;
+        var paused = obj.videoPaused;
+        var time = obj.videoCurrTime;
+        var ended = obj.videoEnded;
+        var volume = obj.videoVolume;
+        var muted = obj.videoMuted;
+        //console.log(obj);
+
         this.ignoreEvents = true;
         if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
         this.ignoreEventsTimer = setTimeout(function(){
@@ -911,7 +952,7 @@ var TheVideoController = {
         }
 
         if(TheVideoController.video.paused !== paused) {
-            if(!paused && (TheVideoController.video.paused || !TheVideoController.video.ended)) TheVideoController.video.play();
+            if(!paused && TheVideoController.video.paused) TheVideoController.video.play();
             else if(paused) TheVideoController.video.pause();
         }
 
@@ -920,6 +961,20 @@ var TheVideoController = {
 
         //TheVideoController.video.volume = volume;
         //TheVideoController.video.muted = muted;
+    },
+    
+    play: function(set){},
+    pause: function(set){},
+    togglePause: function(){},
+    toggleFullScreen: function() {
+        if(!this.video) return;
+        
+        if(!this.video.fullscreenElement) {
+            this.video.requestFullscreen();
+        }
+        else if(this.video.exitFullscreen) {
+            this.video.exitFullscreen(); 
+        }
     }
 };
 
