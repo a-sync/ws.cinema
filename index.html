@@ -409,7 +409,7 @@ function sendChat(){
             }
         }
         else if(str === '/fs') {
-            TheVideoController.toggleFullScreen();
+            TheVideoController.fullScreen();
         }
         else if(str === '/master') {
             if(!TheVideoController.master && TheVideoController.video != null) {
@@ -453,7 +453,7 @@ function sendChat(){
                       +'<br><b>/mute</b> '
                       +'<br><b>/unmute</b> '
                       +'<br><b>/m</b> (toggle mute) '
-                      +'<br><b>/fs</b> (fullscreen) '
+                      +'<br><b>/fs</b> (full screen) '
                       +'<br><b>/setbg</b> (0-'+(backgroundCs.length-1)+') '
                       +'<br><b>/setposter</b> (0-'+(posterPs.length-1)+') '
                       +'<br><b>/gif</b> (search via giphy) '
@@ -858,10 +858,13 @@ var TheVideoController = {
 	addListeners: function() {
 		this.video.onmouseover = function (e) {
             this.setAttribute("controls", "controls");
+            //if(!this.OZIndex) this.OZIndex=this.style.zIndex;
+            //this.style.zIndex=666;
         };
         //this.video.onmousemove = this.video.onmouseover;
         this.video.onmouseout = function (e) {
             this.removeAttribute("controls");
+            //if(this.OZIndex) this.style.zIndex=this.OZIndex;
         };
         
         this.video.ondblclick = function (e) {
@@ -893,23 +896,25 @@ var TheVideoController = {
         //    console.log('onplay');
 		//};
 		
-		this.video.onplaying  = function(e) {
+		this.video.onplaying = function(e) {
             //console.log('onplaying');
             setSync();
 		};
 		
-		this.video.onseeked  = function(e) {
+		this.video.onseeked = function(e) {
             //console.log('onseeked');
             setSync();
 		};
 
-		this.video.onwaiting  = function(e) {
+		this.video.onwaiting = function(e) {
             //console.log('onwaiting');
             //if(channel) {
             //    var to_send = {bc:'achexchatdemo', channel: channel, msg: escape('Buffering @ '+this.currentTime) };
             //    $.achex.send(to_send);
             //}
 		};
+		
+		//TODO: onwebkitfullscreenchange = use notifications
 	},
 
     snap: function (q) {
@@ -966,17 +971,25 @@ var TheVideoController = {
     play: function(set){},
     pause: function(set){},
     togglePause: function(){},
-    toggleFullScreen: function() {
+    fullScreen: function() {
         if(!this.video) return;
         
-        if(!this.video.fullscreenElement) {
-            this.video.requestFullscreen();
-        }
-        else if(this.video.exitFullscreen) {
-            this.video.exitFullscreen(); 
-        }
+        reqFs(this.video);
     }
 };
+
+function reqFs(elem) {
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    }
+}
+
 
 var posterPs = [
     {url:''},
