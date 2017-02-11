@@ -817,7 +817,13 @@ var TheVideoController = {
         if(!q || q > 100 || q < 1) q = 60;
         this.context.fillRect(0, 0, this.w, this.h);
         this.context.drawImage(this.video, 0, 0, this.w, this.h);
-        this.snapDataUrl = this.canvas.toDataURL('image/jpeg',q/100);
+        try{
+            this.snapDataUrl = this.canvas.toDataURL('image/jpeg',q/100);
+        } catch(e){
+            this.snapDataUrl = null;
+            //htmlToSelf(' ');
+            //$('.sys-msg:last-child').last().append(this.canvas);
+        }
     },
     
     syncToMaster: function (src, paused, time, ended, volume, muted) {
