@@ -300,9 +300,12 @@ if(window.location.hash == '#clear-name') {
 }
 
 var username = window.localStorage.username || '';
+var firstRun = false;
 while(username == ''){
 	username = prompt('Enter Username').replace(/\W+/g, "");
 	window.localStorage.username = username;
+	firstRun = true;
+	
 }
 $('#username').html(username);
 
@@ -312,8 +315,13 @@ if(typeof btorrentChannelName === 'string') channel = btorrentChannelName;
 function oc(e){
 	console.log('connection opened');
 	$.achex.send({cmd:'register_broadcast', bid:'achexchatdemo'});
-	
 	refreshUserList();
+	
+	if(firstRun === true) {
+        htmlToSelf('You can list commands with <b>/help</b>', 'Welcome');
+        lastUser = null;
+        firstRun = false;
+    }
 }
 
 
@@ -476,31 +484,32 @@ function sendChat(){
             TheVideoController.seek(str.split(' ')[1]);
         }
         else if(str === '/help' || str === '/man') {
-            htmlToSelf('<b>/help, /man</b> '
-                      +'<br><b>/cb, /c</b> (show control bar) '
-                      +'<br><b>/clear, /cls</b> (clear screen) '
-                      +'<br><b>/name, /nick</b> '
-                      +'<br><b>/setvideo, /video</b> '
-                      +'<br><b>/getvideo</b> '
-                      +'<br><b>/play</b> '
-                      +'<br><b>/pause</b> '
-                      +'<br><b>/p</b> (toggle play / pause) '
-                      +'<br><b>/seek, /s</b> &#177;int (seconds) '
-            ,' ');
             lastUser = null;
             htmlToSelf('<b>/mute</b> '
                   +'<br><b>/unmute</b> '
                   +'<br><b>/m</b> (toggle mute) '
                   +'<br><b>/volume, /v</b> 0-100 '
-                  +'<br><b>/fullscreen, /fs</b> '
                   +'<br><b>/setbg</b> 0-'+(backgroundCs.length-1)+' '
                   +'<br><b>/setposter</b> 0-'+(posterPs.length-1)+' '
                   +'<br><b>/gif</b> (search via giphy) '
                   +'<br><b>/giflate</b> (translate via giphy) '
                   +'<br><b>/sticker</b> (search via giphy) '
                   +'<br><b>/sticklate</b> (translate via giphy) '
-                //+'<br>/master '
-                //+'<br>/snap %quality=60'
+                //+'<br><b>/master '
+                //+'<br><b>/snap</b> 0-100 (quality)'
+            ,' ');
+            lastUser = null;
+            htmlToSelf('<b>/help, /man</b> '
+                  +'<br><b>/cb, /c</b> (show control bar) '
+                  +'<br><b>/clear, /cls</b> (clear screen) '
+                  +'<br><b>/name, /nick</b> '
+                  +'<br><b>/setvideo, /video</b> '
+                  +'<br><b>/getvideo</b> '
+                  +'<br><b>/play</b> '
+                  +'<br><b>/pause</b> '
+                  +'<br><b>/p</b> (toggle play / pause) '
+                  +'<br><b>/seek, /s</b> &#177;int (seconds) '
+                  +'<br><b>/fullscreen, /fs</b> '
             ,' Available commands');
             lastUser = null;
         }
