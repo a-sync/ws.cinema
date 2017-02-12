@@ -421,30 +421,39 @@ function sendChat(){
             else htmlToSelf(esc(TheVideoController.video.currentSrc));
         }
         else if(str === '/play' || str === '/pause' || str === '/p') {
-            if(TheVideoController.video.paused) {
-                if(str === '/play' || str === '/p') TheVideoController.video.play();
+            if(TheVideoController.video != null) {
+                if(TheVideoController.video.paused) {
+                    if(str === '/play' || str === '/p') TheVideoController.video.play();
+                }
+                else {
+                    if(str === '/pause' || str === '/p') TheVideoController.video.pause();
+                }
             }
-            else {
-                if(str === '/pause' || str === '/p') TheVideoController.video.pause();
-            }
+            else htmlToSelf('No video loaded...');
         }
         else if(str === '/cb' || str == '/c') {
             TheVideoController.showControls();
         }
         else if((str.slice(0, 8) === '/volume ' || str.slice(0, 3) === '/v ') && !isNaN(str.split(' ')[1])) {
-            var v = parseInt(str.split(' ')[1])/100;
-            if(v >= 0 && v <= 1) {
-                if(TheVideoController.video.muted) TheVideoController.video.muted = false;
-                TheVideoController.video.volume = v;
+            if(TheVideoController.video != null) {
+                var v = parseInt(str.split(' ')[1])/100;
+                if(v >= 0 && v <= 1) {
+                    if(TheVideoController.video.muted) TheVideoController.video.muted = false;
+                    TheVideoController.video.volume = v;
+                }
             }
+            else htmlToSelf('No video loaded...');
         }
         else if(str === '/mute' || str === '/unmute' || str === '/m') {
-            if(!TheVideoController.video.muted) {
-                if(str === '/mute' || str === '/m') TheVideoController.video.muted = true;
+            if(TheVideoController.video != null) {
+                if(!TheVideoController.video.muted) {
+                    if(str === '/mute' || str === '/m') TheVideoController.video.muted = true;
+                }
+                else {
+                    if(str === '/unmute' || str === '/m') TheVideoController.video.muted = false;
+                }
             }
-            else {
-                if(str === '/unmute' || str === '/m') TheVideoController.video.muted = false;
-            }
+            else htmlToSelf('No video loaded...');
         }
         else if(str === '/fullscreen' || str === '/fs') {
             TheVideoController.fullScreen();
@@ -467,17 +476,19 @@ function sendChat(){
             setBg(parseInt(str.split(' ')[1]));
         }
         else if(str === '/snap' || str.indexOf('/snap ') === 0) {
-            var q = null;
-            if(str.length > 6) {
-                if(!isNaN(str.split(' ')[1])) q = str.split(' ')[1];
-            }
-            if(TheVideoController.video) {
+            if(TheVideoController.video != null) {
+                var q = null;
+                if(str.length > 6) {
+                    if(!isNaN(str.split(' ')[1])) q = str.split(' ')[1];
+                }
+
                 TheVideoController.snap(q);
                 if(TheVideoController.snapDataUrl !== null) {
                     var to_send = {bc:'achexchatdemo', snap: escape(TheVideoController.snapDataUrl) };
                     $.achex.send(to_send);
                 }
-            } else htmlToSelf('No video loaded...');
+            }
+            else htmlToSelf('No video loaded...');
         }
         else if((str.slice(0, 6) === '/seek ' || str.slice(0, 3) === '/s ') 
                 && str.split(' ').length > 1 && str.split(' ')[1] !== '') {
