@@ -327,7 +327,7 @@ function chatEvent(obj, raw){
             if(type === '/100.webp') {
                 obj.gif = obj.gif.slice(0, obj.gif.length-9)+'/200.webp';
             }
-            rcvChat(obj, '<img width="'+(obj.width*2)+'" src="'+obj.gif+'" class="msg-gif loading" />');
+            rcvChat(obj, '<img width="'+(obj.width*2)+'" src="'+obj.gif+'" class="msg-gif loading" onload="this.className=\'msg-gif\'" />');
 		}
 		else if(obj.videoSrc != null) {
             TheVideoController.init('the-video');
@@ -337,7 +337,7 @@ function chatEvent(obj, raw){
             }
 		}
 		else if(obj.snap != null) {
-            rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" />');
+            rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" onload="this.className=\'msg-snap\'" />');
 		}
 		else if(obj.videoCurrSrc != null) {
             TheVideoController.syncToMaster(obj);
