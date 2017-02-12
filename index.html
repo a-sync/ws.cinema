@@ -215,6 +215,13 @@ background-repeat: no-repeat;
 background-position: center center;
 min-height: 40px;
 }
+.round-btn {
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    text-align:left;
+}
 .cinema_bg{
 background-image:url('cinema.jpg');
 background-repeat: no-repeat;
@@ -260,17 +267,21 @@ background-position: center center;
 				</div>
 				<div id="chat-tooltip-container"><div id="chat-tooltip"></div></div>
 				<div id="chat-input-container">
-                    <button type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()">SET VIDEO</button>
-                                        
+                    <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:5px" onclick="javascript:TheVideoController.seek(-10)" title="seek 10s backward" alt="/s -10">&#9194;</button>
+                    <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:4px;font-size:0.6em" onclick="javascript:TheVideoController.pp()" title="play / pause" alt="/p">&#10074;&#10074;&nbsp;&#9658;</button>
+                    <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:7px" onclick="javascript:TheVideoController.seek(10)" title="seek 10s forward" alt="/s +10">&#9193;</button>
+                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.showControls()" title="show control bar" alt="/c"><img height="15" src="favicon.png"/></button>
+                    <button type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()" title="set the stream url" alt="/video">SET VIDEO</button>
+                    
                     <input id="chat_input" type="text">&nbsp;<button type="button" class="btn btn-primary btn-xs" onclick="javascript:sendChat()">SEND</button>
-                    <button type="button" class="btn btn-danger btn-xs" onclick="javascript:clearChatWindow()">CLEAR</button>
+                    <button type="button" class="btn btn-danger btn-xs" onclick="javascript:clearChatWindow()" alt="clear screen" title="/cls">CLEAR</button>
 				</div>
 			</div>
 	</div>
 
 		<div id="log"></div>
 <script>
-
+//TODO: remove messages after time delay
 var users = [];
 var channels = [];
 
@@ -400,6 +411,9 @@ function sendChat(){
                 if(str === '/pause' || str === '/p') TheVideoController.video.pause();
             }
         }
+        else if(str === '/cb' || str == '/c') {
+            TheVideoController.showControls();
+        }
         else if((str.slice(0, 8) === '/volume ' || str.slice(0, 3) === '/v ') && !isNaN(str.split(' ')[1])) {
             var v = parseInt(str.split(' ')[1])/100;
             if(v >= 0 && v <= 1) {
@@ -415,7 +429,7 @@ function sendChat(){
                 if(str === '/unmute' || str === '/m') TheVideoController.video.muted = false;
             }
         }
-        else if(str === '/fs') {
+        else if(str === '/fullscreen' || str === '/fs') {
             TheVideoController.fullScreen();
         }
         else if(str === '/master') {
@@ -448,30 +462,38 @@ function sendChat(){
                 }
             } else htmlToSelf('No video loaded...');
         }
+        else if((str.slice(0, 6) === '/seek ' || str.slice(0, 3) === '/s ') 
+                && str.split(' ').length > 1 && str.split(' ')[1] !== '') {
+            TheVideoController.seek(str.split(' ')[1]);
+        }
         else if(str === '/help' || str === '/man') {
-            var cmds = 'Available commands: <br><b>/help, /man</b> '
+            htmlToSelf('<b>/help, /man</b> '
+                      +'<br><b>/cb, /c</b> (show control bar) '
                       +'<br><b>/clear, /cls</b> (clear screen) '
                       +'<br><b>/name, /nick</b> '
                       +'<br><b>/setvideo, /video</b> '
                       +'<br><b>/getvideo</b> '
                       +'<br><b>/play</b> '
                       +'<br><b>/pause</b> '
-                      +'<br><b>/p</b> (toggle play/pause) '
-                      +'<br><b>/mute</b> '
-                      +'<br><b>/unmute</b> '
-                      +'<br><b>/m</b> (toggle mute) '
-                      +'<br><b>/volume, /v</b> 0-100 '
-                      +'<br><b>/fs</b> (full screen) '
-                      +'<br><b>/setbg</b> 0-'+(backgroundCs.length-1)+' '
-                      +'<br><b>/setposter</b> 0-'+(posterPs.length-1)+' '
-                      +'<br><b>/gif</b> (search via giphy) '
-                      +'<br><b>/giflate</b> (translate via giphy) '
-                      +'<br><b>/sticker</b> (search via giphy) '
-                      +'<br><b>/sticklate</b> (translate via giphy) '
-                    //+'<br>/master '
-                    //+'<br>/snap %quality=60'
-                      ;
-            htmlToSelf(cmds);
+                      +'<br><b>/p</b> (toggle play / pause) '
+                      +'<br><b>/seek, /s</b> &#177;int (seconds) '
+            ,' ');
+            lastUser = null;
+            htmlToSelf('<b>/mute</b> '
+                  +'<br><b>/unmute</b> '
+                  +'<br><b>/m</b> (toggle mute) '
+                  +'<br><b>/volume, /v</b> 0-100 '
+                  +'<br><b>/fullscreen, /fs</b> '
+                  +'<br><b>/setbg</b> 0-'+(backgroundCs.length-1)+' '
+                  +'<br><b>/setposter</b> 0-'+(posterPs.length-1)+' '
+                  +'<br><b>/gif</b> (search via giphy) '
+                  +'<br><b>/giflate</b> (translate via giphy) '
+                  +'<br><b>/sticker</b> (search via giphy) '
+                  +'<br><b>/sticklate</b> (translate via giphy) '
+                //+'<br>/master '
+                //+'<br>/snap %quality=60'
+            ,' Available commands');
+            lastUser = null;
         }
         else {
             var to_send = {bc:'achexchatdemo', channel: channel, msg : escape(str) };
@@ -482,8 +504,9 @@ function sendChat(){
 	}
 }
 
-function htmlToSelf(html) {
-    var obj = {FROM:$.achex.username, sID:$.achex.sid};
+function htmlToSelf(html, title) {
+    if(!title) title = $.achex.username;
+    var obj = {FROM:title, sID:$.achex.sid};
     rcvChat(obj, '<i class="sys-msg">'+html+'</i>');
 }
 
@@ -867,22 +890,49 @@ var TheVideoController = {
 		this.addListeners();
 	},
 
+    showControls: function() {
+        if(this.video == null) this.init('the-video');
+        
+        this.video.setAttribute('controls', 'controls');
+        this.video.style.zIndex = 666;
+    },
+    
+    pp: function() {
+        if(this.video == null) this.init('the-video');
+        if(this.duration == null) return;
+
+        if(this.video.paused) this.video.play();
+        else this.video.pause();
+    },
+
+    seek: function(i) {
+        i = parseInt(i);
+        if(isNaN(i) || this.duration == null) return;
+
+        var newTime = this.video.currentTime + i;
+        if(newTime > this.duration) newTime = this.duration;
+        else if (newTime < 0) newTime = 0;
+
+        this.video.currentTime = newTime;
+    },
+
 	addListeners: function() {
 		this.video.onmouseover = function (e) {
-            this.setAttribute("controls", "controls");
-            //if(!this.OZIndex) this.OZIndex=this.style.zIndex;
-            //this.style.zIndex=666;
+            TheVideoController.showControls();
         };
         //this.video.onmousemove = this.video.onmouseover;
         this.video.onmouseout = function (e) {
-            this.removeAttribute("controls");
-            //if(this.OZIndex) this.style.zIndex=this.OZIndex;
+            this.removeAttribute('controls');
+            this.style.zIndex = 'auto';
         };
 
         this.video.ondblclick = function (e) {
-            if(TheVideoController.video.paused) TheVideoController.video.play();
-            else TheVideoController.video.pause();
-        }
+            TheVideoController.pp();
+        };
+
+		this.video.onloadstart = function(e) {
+			TheVideoController.duration = null;
+		};
 
 		this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
@@ -890,6 +940,8 @@ var TheVideoController = {
 			TheVideoController.canvas.width = TheVideoController.w;
 			TheVideoController.canvas.height = TheVideoController.h;
 			TheVideoController.duration = this.duration;
+			
+			TheVideoController.showControls();
 		};
 
 		//this.video.oncanplaythrough = function(e) {
@@ -989,8 +1041,8 @@ var TheVideoController = {
         }
 
         if(TheVideoController.video.paused != paused) {
-            if(!paused && TheVideoController.video.paused) TheVideoController.video.play();
-            else if(paused && !TheVideoController.video.paused) TheVideoController.video.pause();
+            if(!paused && TheVideoController.video.paused) TheVideoController.pp();
+            else if(paused && !TheVideoController.video.paused) TheVideoController.pp();
         }
 
         //TODO: check seekthreshold
