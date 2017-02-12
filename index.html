@@ -59,6 +59,7 @@ height:720px;
 top:0;
 width:100%;
 height:auto;
+box-shadow: 0 0 30px 15px #000;
 }
 #logo{
 vertical-align: bottom;
@@ -846,7 +847,7 @@ function sendGif(img) {
 
 function setVideo() {
     var videoSrc = prompt('Insert video source URL', 'http://webtorrent.io/torrents/sintel-1024-surround.mp4');//http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
-    if(videoSrc !== null && videoSrc.length > 10 && videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://') {
+    if(videoSrc !== null && videoSrc.length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
         var to_send = {bc:'achexchatdemo', videoSrc: escape(videoSrc.trim()) };
 		$.achex.send(to_send);
     }
@@ -949,7 +950,7 @@ var TheVideoController = {
 			TheVideoController.canvas.height = TheVideoController.h;
 			TheVideoController.duration = this.duration;
 			
-			TheVideoController.showControls();
+			//TheVideoController.showControls();
 		};
 
 		//this.video.oncanplaythrough = function(e) {
