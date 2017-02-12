@@ -218,19 +218,7 @@ box-shadow: 1px 1px 10px 4px rgba(255, 125, 0, 0.8);
 .self-name {
 font-weight: bold;
 }
-.loading {
-background-image: url('loading.gif');
-background-repeat: no-repeat;
-background-position: center center;
-min-height: 40px;
-}
-.round-btn {
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    text-align:left;
-}
+
 .cinema_bg{
 background-image:url('cinema.jpg');
 background-repeat: no-repeat;
@@ -260,6 +248,21 @@ background-repeat: repeat;
 background-position: center center;
 }
 
+.loading {
+background-image: url('loading.gif');
+background-repeat: no-repeat;
+background-position: center center;
+min-height: 40px;
+}
+
+.round-btn {
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    text-align:left;
+}
+
 #chat-input-left{
     position: fixed;
     bottom: 7px;
@@ -277,7 +280,26 @@ background-position: center center;
     color: #22a;
     background-color: rgba(150, 0, 0, 0.96);
 }
-
+span.from > b.cmd-c {
+    background:linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%);
+    border-radius: 4px;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    text-decoration: none;
+    font-family: Monospace, Verdana, sans-serif;
+}
+span.from .cmd-c:hover {
+    box-shadow: 0px 0px 4px 0px rgba(0, 125, 255, 0.8);
+    color: rgba(150, 0, 0, 0.96);
+    cursor: pointer;
+}
+i.sys-msg > b:hover {
+    color: #fff;
+}
 </style>
 	</head>
 	<body onload="setBg(); setPoster();">
@@ -422,10 +444,20 @@ $.achex({
 	closecallback: cc
 });
 
+var cmdModeChars = [':','?'];
+function cmdModeCharsReplacer(cmd) {
+    if(!cmd) return cmd;
 
+    var i = cmdModeChars.indexOf(cmd.slice(0,1));
+    if(i >= 0) {
+        return '/'+cmd.slice(1);
+    }
+
+    return cmd;
+}
 // ---- chat functions
 function sendChat(){
-	var str = input.value;
+	var str = cmdModeCharsReplacer(input.value);
 	if(channel != null && str != null){
         if(str === '/clear' || str ==='/cls') {
             clearChatWindow();
@@ -517,7 +549,12 @@ function sendChat(){
                 && str.split(' ').length > 1 && str.split(' ')[1] !== '') {
             TheVideoController.seek(str.split(' ')[1]);
         }
+        else if(str === '/sync') {
+            setSync();
+        }
         else if(str === '/help' || str === '/man') {
+            var cmdCharsList = '<b class="cmd-c">/</b> ';
+            for(var i = 0; i < cmdModeChars.length; i++) cmdCharsList += '<b class="cmd-c">'+cmdModeChars[i]+'</b> ';
             lastUser = null;
             htmlToSelf('<b>/mute</b> '
                 +'<br><b>/unmute</b> '
@@ -529,9 +566,10 @@ function sendChat(){
                 +'<br><b>/giflate</b> (translate via giphy) '
                 +'<br><b>/sticker</b> (search via giphy) '
                 +'<br><b>/sticklate</b> (translate via giphy) '
-              //+'<br><b>/master '
+                +'<br><b>/sync</b> (broadcast playback properties) '
+              //+'<br><b>/master</b> '
               //+'<br><b>/snap</b> 0-100 (quality)'
-            ,' ');
+            ,' '+cmdCharsList);
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
                 +'<br><b>/cb, /c</b> (show control bar) '
@@ -546,6 +584,29 @@ function sendChat(){
                 +'<br><b>/fullscreen, /fs</b> '
             ,' Available commands');
             lastUser = null;
+
+            var allCmdModeChars = ['?',':', '/'];
+            var replaceCmdCharsInHelp = function(e) {
+                var cmdElemList = document.querySelectorAll('i.sys-msg > b');
+                for(var i = 0; i < cmdElemList.length; i++) {
+                    if(cmdElemList[i].textContent.length > 1) {
+                        var firstChar = cmdElemList[i].textContent.slice(0,1);
+                        var currentCmdChar = allCmdModeChars.indexOf(firstChar);
+
+                        //console.log(currentCmdChar, cmdElemList[i].textContent, firstChar, allCmdModeChars[currentCmdChar]);
+                        if(currentCmdChar !== -1) {
+                            var r = new RegExp('\\'+allCmdModeChars[currentCmdChar], 'g');
+                            cmdElemList[i].textContent = cmdElemList[i].textContent.replace(r, this.textContent);
+                        }
+                    }
+                }
+            }
+            
+            var cmdCharElemList = document.querySelectorAll('span.from > b.cmd-c');
+            for(var i = 0; i < cmdCharElemList.length; i++) {
+                if(i == 0) cmdCharElemList[i].parentNode.style.textDecoration = 'none';
+                cmdCharElemList[i].onmouseover = replaceCmdCharsInHelp;
+            }
         }
         else {
             var to_send = {bc:'achexchatdemo', channel: channel, msg : escape(str) };
@@ -576,8 +637,8 @@ function rcvChat(obj, html){
 	input.scroll = input.scrollHeight;
 }
 function rcvWhisper(obj){
-    if(lastUser != obj.sID) $('#chat_window').append(createChatMessage(obj)).css('color', '#ccc');
-	else $('#chat_window>div:last-child').append('<br>').append(createChatMessage(obj)).css('color', '#ccc');
+    if(lastUser != obj.sID) $('#chat_window').append(createChatMessage(obj)).css('color', 'darkorange');
+	else $('#chat_window>div:last-child').append('<br>').append(createChatMessage(obj)).css('color', 'darkorange');
 	input.scroll = input.scrollHeight;
 }
 
@@ -601,7 +662,7 @@ function createChatMessage(obj, html){
             }
         }
         
-        msg.innerHTML = msgText.join(' ');
+        msg.textContent = msgText.join(' ');
     }
     else msg.innerHTML = html;
     
