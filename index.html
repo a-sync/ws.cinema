@@ -52,6 +52,13 @@ position: relative;
 top: 35px;
 background-color: rgba(0,0,0,0.92);
 box-shadow: 0 0 10px 2px rgba(0,0,0,0.8);
+width:1280px;
+height:720px;
+}
+#the-video.full {
+top:0;
+width:100%;
+height:auto;
 }
 #logo{
 vertical-align: bottom;
@@ -254,7 +261,7 @@ background-position: center center;
 	</head>
 	<body onload="setBg(); setPoster();">
 	<div id="main-content">
-            <video width="1280" height="720" id="the-video" src="" poster=""></video>
+            <video id="the-video" src="" poster=""></video>
 			<div id="chat_cont" onclick="input.focus();">
 				<div>
 					<div id="username-container">Username:&nbsp;<span id="username"></span></div>
@@ -270,11 +277,12 @@ background-position: center center;
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:5px" onclick="javascript:TheVideoController.seek(-10)" title="seek 10s backward" alt="/s -10">&#9194;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:4px;font-size:0.6em" onclick="javascript:TheVideoController.pp()" title="play / pause" alt="/p">&#10074;&#10074;&nbsp;&#9658;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:7px" onclick="javascript:TheVideoController.seek(10)" title="seek 10s forward" alt="/s +10">&#9193;</button>
-                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.showControls()" title="show control bar" alt="/c"><img height="15" src="favicon.png"/></button>
+                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.showControls()" title="show control bar" alt="/c">&#x25b3;</button>
                     <button type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()" title="set the stream url" alt="/video">SET VIDEO</button>
                     
                     <input id="chat_input" type="text">&nbsp;<button type="button" class="btn btn-primary btn-xs" onclick="javascript:sendChat()">SEND</button>
-                    <button type="button" class="btn btn-danger btn-xs" onclick="javascript:clearChatWindow()" alt="clear screen" title="/cls">CLEAR</button>
+                    <button type="button" class="btn btn-danger btn-xs" onclick="javascript:clearChatWindow()" title="clear screen" alt="/cls">CLEAR</button>
+                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.fullScreen()" title="full screen" alt="/fs"><img height="15" src="favicon.png"/></button>
 				</div>
 			</div>
 	</div>
@@ -1053,14 +1061,21 @@ var TheVideoController = {
         //TheVideoController.video.volume = volume;
         //TheVideoController.video.muted = muted;
     },
-    
+
     play: function(set){},
     pause: function(set){},
-    togglePause: function(){},
+
     fullScreen: function() {
-        if(!this.video) return;
-        
-        reqFs(this.video);
+        if(this.video == null) this.init('the-video');
+
+        if(this.video.className === 'full') {
+            exitFs();
+            this.video.className = '';
+        }
+        else {
+            reqFs(document.getElementsByTagName('html')[0]);
+            this.video.className = 'full';
+        }
     }
 };
 
@@ -1073,6 +1088,32 @@ function reqFs(elem) {
         elem.mozRequestFullScreen();
     } else if (elem.webkitRequestFullscreen) {
         elem.webkitRequestFullscreen();
+    }
+}
+function exitFs() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    }
+}
+
+if(document.addEventListener)
+{
+    document.addEventListener('webkitfullscreenchange', exitFSHandler, false);
+    document.addEventListener('mozfullscreenchange', exitFSHandler, false);
+    document.addEventListener('fullscreenchange', exitFSHandler, false);
+    document.addEventListener('MSFullscreenChange', exitFSHandler, false);
+}
+function exitFSHandler()
+{
+    if(!document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement)
+    {
+        TheVideoController.video.className = '';
     }
 }
 
