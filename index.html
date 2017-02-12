@@ -414,7 +414,7 @@ function sendChat(){
         else if(str === '/master') {
             if(!TheVideoController.master && TheVideoController.video != null) {
                 TheVideoController.master = true;
-                setSync(true);
+                setSync();
                 htmlToSelf('Entered master mode...');
             }
             else {
@@ -813,10 +813,10 @@ function setVideo() {
     }
 }
 
-var lastSyncTimeStamp = 0;
-function setSync(force){
+function setSync(){
 	//TODO: make use of TheVideoController.master
-	if(force || (TheVideoController.video && !TheVideoController.ignoreEvents)){
+	//console.log('setSync');
+	if(TheVideoController.video){
 		var to_send = {
             bc:'achexchatdemo', 
             timestamp: Date.now(),
@@ -827,7 +827,8 @@ function setSync(force){
             videoVolume: TheVideoController.video.volume,
             videoMuted: TheVideoController.video.muted
 		};
-		lastSyncTimeStamp = to_send.timestamp;
+		TheVideoController.lastSyncTimeStamp = to_send.timestamp;
+		//TheVideoController.lastSyncObj = to_send;
 		$.achex.send(to_send);
 		//console.log('setSync', to_send);
 	}
@@ -845,8 +846,11 @@ var TheVideoController = {
     master: false,
     ignoreEvents: false,
     ignoreEventsTimer: null,
-    ignoreDelay: 2000,
+    ignoreDelay: 100,
+    lastSyncTimeStamp: 0,
+    lastSyncObj: null,
     //TODO: seekThreshold: 1, //seconds
+    
     init: function(videoId) {
 		this.video = document.getElementById(videoId);
 		this.canvas = document.createElement('CANVAS');
@@ -866,12 +870,12 @@ var TheVideoController = {
             this.removeAttribute("controls");
             //if(this.OZIndex) this.style.zIndex=this.OZIndex;
         };
-        
+
         this.video.ondblclick = function (e) {
             if(TheVideoController.video.paused) TheVideoController.video.play();
             else TheVideoController.video.pause();
         }
-        
+
 		this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
 			TheVideoController.h = this.videoHeight;
@@ -879,41 +883,56 @@ var TheVideoController = {
 			TheVideoController.canvas.height = TheVideoController.h;
 			TheVideoController.duration = this.duration;
 		};
-		
+
 		//this.video.oncanplaythrough = function(e) {
         //  //console.log('oncanplaythrough');
 		//};
-		
+
 		//this.video.onended = function(e) {
         //  //console.log('onended');
 		//};
-		
+
 		this.video.onpause = function(e) {
-            //console.log('onpause');
-            setSync();
+            //console.log('onpause', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            if(!TheVideoController.ignoreEvents) {
+                if( TheVideoController.lastSyncObj == null 
+                    || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
+                ) {
+                    setSync();
+                }
+            }
 		};
-		//this.video.onplay = function(e) {
-        //    console.log('onplay');
+
+		this.video.onplay = function(e) {
+            //console.log('onplay', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            if(!TheVideoController.ignoreEvents) {
+                setSync();
+            }
+		};
+
+		//this.video.onplaying = function(e) {
+        //    console.log('onplaying', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
 		//};
-		
-		this.video.onplaying = function(e) {
-            //console.log('onplaying');
-            setSync();
-		};
-		
+
 		this.video.onseeked = function(e) {
-            //console.log('onseeked');
-            setSync();
+            //console.log('onseeked', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            if(!TheVideoController.ignoreEvents) {
+                if( TheVideoController.lastSyncObj == null 
+                    || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
+                ) {
+                    setSync();
+                }
+            }
 		};
 
 		this.video.onwaiting = function(e) {
-            //console.log('onwaiting');
+            //console.log('onwaiting', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
             //if(channel) {
             //    var to_send = {bc:'achexchatdemo', channel: channel, msg: escape('Buffering @ '+this.currentTime) };
             //    $.achex.send(to_send);
             //}
 		};
-		
+
 		//TODO: onwebkitfullscreenchange = use notifications
 	},
 
@@ -932,8 +951,11 @@ var TheVideoController = {
     
     syncToMaster: function (obj) {
         if(this.master || obj.sID == $.achex.sid) return;
+        //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
 
-        if(!isNaN(lastSyncTimeStamp) && obj.timestamp < lastSyncTimeStamp) return;
+        if(!isNaN(this.lastSyncTimeStamp) && obj.timestamp < this.lastSyncTimeStamp) return;
+        this.lastSyncTimeStamp = obj.timestamp;
+        this.lastSyncObj = obj;
 
         var src = unescape(obj.videoCurrSrc);
         var timestamp = obj.timestamp;
@@ -944,11 +966,13 @@ var TheVideoController = {
         var muted = obj.videoMuted;
         //console.log(obj);
 
-        this.ignoreEvents = true;
-        if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
-        this.ignoreEventsTimer = setTimeout(function(){
-            TheVideoController.ignoreEvents = false;
-        }, this.ignoreDelay);
+        if(this.ignoreDelay > 0) {
+            this.ignoreEvents = true;
+            if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
+            this.ignoreEventsTimer = setTimeout(function(){
+                TheVideoController.ignoreEvents = false;
+            }, this.ignoreDelay);
+        }
 
         if(TheVideoController.video == null) TheVideoController.init('the-video');
         if(TheVideoController.video.currentSrc != src) {
@@ -956,13 +980,15 @@ var TheVideoController = {
             TheVideoController.video.load();
         }
 
-        if(TheVideoController.video.paused !== paused) {
+        if(TheVideoController.video.paused != paused) {
             if(!paused && TheVideoController.video.paused) TheVideoController.video.play();
-            else if(paused) TheVideoController.video.pause();
+            else if(paused && !TheVideoController.video.paused) TheVideoController.video.pause();
         }
 
-        console.log(TheVideoController.video.currentTime, time);
-        TheVideoController.video.currentTime = time;
+        //TODO: check seekthreshold
+        if(TheVideoController.video.currentTime != time) {
+            TheVideoController.video.currentTime = time;
+        }
 
         //TheVideoController.video.volume = volume;
         //TheVideoController.video.muted = muted;
