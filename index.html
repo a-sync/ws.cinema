@@ -401,7 +401,10 @@ function sendChat(){
         }
         else if((str.slice(0, 8) === '/volume ' || str.slice(0, 3) === '/v ') && !isNaN(str.split(' ')[1])) {
             var v = parseInt(str.split(' ')[1])/100;
-            if(v >= 0 && v <= 1) TheVideoController.video.volume = v;
+            if(v >= 0 && v <= 1) {
+                if(TheVideoController.video.muted) TheVideoController.video.muted = false;
+                TheVideoController.video.volume = v;
+            }
         }
         else if(str === '/mute' || str === '/unmute' || str === '/m') {
             if(!TheVideoController.video.muted) {
