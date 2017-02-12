@@ -302,10 +302,10 @@ i.sys-msg > b:hover {
 }
 </style>
 	</head>
-	<body onload="setBg(); setPoster();">
+	<body onload="loadInit()">
 	<div id="main-content">
             <video id="the-video" src="" poster=""></video><!-- crossorigin="anonymous" -->
-			<div id="chat_cont" onclick="input.focus();">
+			<div id="chat_cont">
 				<div>
 					<div id="username-container">Username:&nbsp;<span id="username"></span></div>
 					<div id="users-title"><canvas id="logo" width="25" height="25"></canvas>Users</div>
@@ -369,6 +369,16 @@ function oc(e){
     }
 }
 
+function loadInit() {
+    setBg();
+    setPoster();
+
+    if(!input) input = document.getElementById('chat_input');
+    input.focus();
+    window.onclick = function() {
+        if(input.focus) input.focus();
+    };
+}
 
 function cc(){
 	$.achex.send({bc:'achexchatdemo', offline: username});
@@ -788,7 +798,6 @@ function showUsers(){
 function logf(str){
 	$('#log').append(str+'<br>')
 }
-input.focus();
 
 function esc(str) {
     return str.replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quote;').replace("'", '&#8217;');
