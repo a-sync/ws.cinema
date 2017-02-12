@@ -262,7 +262,7 @@ background-position: center center;
 	</head>
 	<body onload="setBg(); setPoster();">
 	<div id="main-content">
-            <video id="the-video" src="" poster=""></video>
+            <video id="the-video" crossorigin="anonymous" src="" poster=""></video>
 			<div id="chat_cont" onclick="input.focus();">
 				<div>
 					<div id="username-container">Username:&nbsp;<span id="username"></span></div>
@@ -889,7 +889,7 @@ var TheVideoController = {
     ignoreDelay: 100,
     lastSyncTimeStamp: 0,
     lastSyncObj: null,
-    //TODO: seekThreshold: 1, //seconds
+    //TODO: seekThreshold: 500, //ms
     
     init: function(videoId) {
 		this.video = document.getElementById(videoId);
@@ -910,8 +910,10 @@ var TheVideoController = {
         if(this.video == null) this.init('the-video');
         if(this.duration == null) return;
 
-        if(this.video.paused) this.video.play();
-        else this.video.pause();
+        try {
+            if(this.video.paused) this.video.play();
+            else this.video.pause();
+        } catch(e){}
     },
 
     seek: function(i) {
@@ -967,6 +969,7 @@ var TheVideoController = {
                 if( TheVideoController.lastSyncObj == null 
                     || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
                 ) {
+                    //console.log('pause sync');
                     setSync();
                 }
             }
@@ -975,6 +978,7 @@ var TheVideoController = {
 		this.video.onplay = function(e) {
             //console.log('onplay', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
             if(!TheVideoController.ignoreEvents) {
+                //console.log('play sync');
                 setSync();
             }
 		};
@@ -989,6 +993,7 @@ var TheVideoController = {
                 if( TheVideoController.lastSyncObj == null 
                     || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
                 ) {
+                    //console.log('seeked sync');
                     setSync();
                 }
             }
@@ -1019,21 +1024,18 @@ var TheVideoController = {
     },
     
     syncToMaster: function (obj) {
-        if(this.master || obj.sID == $.achex.sid) return;
+        if(!obj || this.master || obj.sID == $.achex.sid) return;
         //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
-
         if(!isNaN(this.lastSyncTimeStamp) && obj.timestamp < this.lastSyncTimeStamp) return;
+
+        if(this.video == null) this.init('the-video');
+
+        if(this.video.currentTime != obj.videoCurrTime && !obj.videoPaused) {
+            obj.videoCurrTime += (Date.now() - obj.timestamp) / 1000;
+        }
+
         this.lastSyncTimeStamp = obj.timestamp;
         this.lastSyncObj = obj;
-
-        var src = unescape(obj.videoCurrSrc);
-        var timestamp = obj.timestamp;
-        var paused = obj.videoPaused;
-        var time = obj.videoCurrTime;
-        var ended = obj.videoEnded;
-        var volume = obj.videoVolume;
-        var muted = obj.videoMuted;
-        //console.log(obj);
 
         if(this.ignoreDelay > 0) {
             this.ignoreEvents = true;
@@ -1043,24 +1045,21 @@ var TheVideoController = {
             }, this.ignoreDelay);
         }
 
-        if(TheVideoController.video == null) TheVideoController.init('the-video');
-        if(TheVideoController.video.currentSrc != src) {
-            TheVideoController.video.src = src;
-            TheVideoController.video.load();
+        
+        if(this.video.currentSrc != unescape(obj.videoCurrSrc)) {
+            this.video.src = unescape(obj.videoCurrSrc);
+            this.video.load();
         }
 
-        if(TheVideoController.video.paused != paused) {
-            if(!paused && TheVideoController.video.paused) TheVideoController.pp();
-            else if(paused && !TheVideoController.video.paused) TheVideoController.pp();
+        if(this.video.paused != obj.videoPaused) {
+            if(!obj.videoPaused && this.video.paused) this.pp();
+            else if(obj.videoPaused && !this.video.paused) this.pp();
         }
 
         //TODO: check seekthreshold
-        if(TheVideoController.video.currentTime != time) {
-            TheVideoController.video.currentTime = time;
+        if(this.video.currentTime != obj.videoCurrTime) {
+            this.video.currentTime = obj.videoCurrTime;
         }
-
-        //TheVideoController.video.volume = volume;
-        //TheVideoController.video.muted = muted;
     },
 
     play: function(set){},
