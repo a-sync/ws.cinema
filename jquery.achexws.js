@@ -180,7 +180,7 @@ function AchexWs(obj)
 		self.reconnect_flag = true;
 		self.ws = new WebSocket(self.url + ':'+ self.port);
 		self.ws.onopen = function(){
-			console.log('opened ws');
+			if(console.log)console.log('opened ws');
 			self.logo.drawFitToCanvas({c1:'#090',c2:'#070'});
 			if(self.service){
 				self.ws.send('{"serverSetID":"'+self.username+'","passwd":"'+self.password+'"}');
@@ -195,7 +195,7 @@ function AchexWs(obj)
 		self.ws.onclose= function(){
 			self.ready=false;
 			self.sid=-1;
-			console.log('closed ws');
+			if(console.log)console.log('closed ws');
 			self.logo.drawFitToCanvas({c1:'#bbb',c2:'#aaa'});
             if( self.reconnect_flag && !isNaN( self.reconnect ) ){
                 setTimeout(function(){
@@ -206,7 +206,7 @@ function AchexWs(obj)
 		self.ws.onmessage = function(e){
 			// dbg
             if(self.dbg){
-                console.log(e.data);
+                if(console.log)console.log(e.data);
             }
 			// dbg
 			try{
@@ -216,7 +216,7 @@ function AchexWs(obj)
 				}else if(rcv.auth != null && rcv.FROM == null){
 					if(rcv.auth=='ok'){
 						clearTimeout(self.identify_timeout);
-						console.log('connected ws');
+						if(console.log)console.log('connected ws');
 						self.logo.drawFitToCanvas({c1:'#37a',c2:'#269'}, self.fade);
 						self.ready=true;
 						if(self.opencallback != null){
@@ -231,7 +231,7 @@ function AchexWs(obj)
 					}
 				}
 			}catch(err){
-                console.log('no json object');
+                if(console.log)console.log('no json object');
                 if(self.callback != null){
                     self.callback( null, e.data );
                 }
@@ -240,8 +240,8 @@ function AchexWs(obj)
 		self.ws.onerror = function(e){
 			self.ready=false;
 			self.sid=-1;
-			console.log('err:');
-			console.log(e);
+			if(console.log)console.log('err:');
+			if(console.log)console.log(e);
 			self.logo.drawFitToCanvas({c1:'#800',c2:'#700'});
 		};
 	};
@@ -255,7 +255,7 @@ function AchexWs(obj)
             for(var i=0; i< self.send_buf.length; i++){
                 if(self.send_buf[i] != ''){
                     self.ws.send(self.send_buf[i]); // ws_send
-                    console.log('sending:' + self.send_buf[i]);
+                    if(console.log)console.log('sending:' + self.send_buf[i]);
                 }
             }
             self.send_buf = [];
@@ -279,7 +279,7 @@ function AchexWs(obj)
                 self.ws.send(tosend);
             }
         }else{
-            console.log('WARN - WS NOT READY');
+            if(console.log)console.log('WARN - WS NOT READY');
             self.send_buf.push(tosend);
             setTimeout(self.sendPending,1000);
         }
