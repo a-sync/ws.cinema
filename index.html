@@ -403,8 +403,8 @@ function chatEvent(obj, raw){
 			// in channel info
 			$.achex.send({bc:bcChannel, inroom: channel});
 		}else if(obj.inroom != null){
-            if(users[obj.sID] == null){
-                users[obj.sID]  = {c:String(obj.FROM)};
+            if(obj.inroom == channel){
+                users[obj.sID] = {c:String(obj.FROM)};
             }
 		}else if(obj.gif != null) {
             var type = obj.gif.slice(-9);
