@@ -1015,6 +1015,7 @@ function sendGif(img) {
 
 function setVideo() {
     var videoSrc = prompt('Insert video source URL', 'http://webtorrent.io/torrents/sintel-1024-surround.mp4');//http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
+    TheVideoController.init('the-video');
     TheVideoController.video.onmousemove = function (e) {
         TheVideoController.showControls();
         TheVideoController.video.onmousemove = null;
