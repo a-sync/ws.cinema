@@ -321,7 +321,7 @@ i.sys-msg > b:hover {
                         <a id="bookmarklet" onclick="alert(this.title);return false;" class="btn btn-xs" title="Get video source URL from any website. Save this bookmarklet via drag and drop or other method and run while the video is playing on your favorite streaming site." href="javascript:(function()%7Bvar%20v%3Ddocument.getElementsByTagName('video')%3Bfor(var%20i%20in%20v)if(v%5Bi%5D.readyState%3E0%26%26!v%5Bi%5D.paused)%7Bprompt('Copy%20video%20source%20URL'%2Cv%5Bi%5D.currentSrc)%3Bbreak%7D%7D)()">BOOKMARKLET</a>
                         <button id="set-video" type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()" title="set the stream url" alt="/video">SET VIDEO</button>
                     </div>
-                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.showControls()" title="show control bar" alt="/c">&#x25b3;</button>
+                    <button type="button" class="btn btn-info btn-xs" onclick="javascript:TheVideoController.toggleControls()" title="toggle control bar" alt="/c">&#x25b3;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:5px" onclick="javascript:TheVideoController.seek(-10)" title="seek 10s backward" alt="/s -10">&#9194;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:4px;font-size:0.6em" onclick="javascript:TheVideoController.pp()" title="play / pause" alt="/p">&#10074;&#10074;&nbsp;&#9658;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:7px" onclick="javascript:TheVideoController.seek(10)" title="seek 10s forward" alt="/s +10">&#9193;</button>
@@ -497,7 +497,7 @@ function sendChat(){
             else htmlToSelf('No video loaded...');
         }
         else if(str === '/cb' || str == '/c') {
-            TheVideoController.showControls();
+            TheVideoController.toggleControls();
         }
         else if((str.slice(0, 8) === '/volume ' || str.slice(0, 3) === '/v ') && !isNaN(str.split(' ')[1])) {
             if(TheVideoController.video != null) {
@@ -582,7 +582,7 @@ function sendChat(){
             ,' '+cmdCharsList);
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
-                +'<br><b>/cb, /c</b> (show control bar) '
+                +'<br><b>/cb, /c</b> (toggle control bar) '
                 +'<br><b>/clear, /cls</b> (clear screen) '
                 +'<br><b>/name, /nick</b> '
                 +'<br><b>/setvideo, /video</b> '
@@ -1015,6 +1015,10 @@ function sendGif(img) {
 
 function setVideo() {
     var videoSrc = prompt('Insert video source URL', 'http://webtorrent.io/torrents/sintel-1024-surround.mp4');//http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
+    TheVideoController.video.onmousemove = function (e) {
+        TheVideoController.showControls();
+        TheVideoController.video.onmousemove = null;
+    };
     if(videoSrc !== null && videoSrc.length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
         var to_send = {bc:'achexchatdemo', videoSrc: escape(videoSrc.trim()) };
 		$.achex.send(to_send);
@@ -1058,7 +1062,7 @@ var TheVideoController = {
     lastSyncTimeStamp: 0,
     lastSyncObj: null,
     //TODO: seekThreshold: 500, //ms
-    
+
     init: function(videoId) {
 		this.video = document.getElementById(videoId);
 		this.canvas = document.createElement('CANVAS');
@@ -1069,11 +1073,23 @@ var TheVideoController = {
 
     showControls: function() {
         if(this.video == null) this.init('the-video');
-        
+
         this.video.setAttribute('controls', 'controls');
         this.video.style.zIndex = 666;
     },
-    
+
+    hideControls: function() {
+        if(this.video == null) this.init('the-video');
+
+        this.video.removeAttribute('controls');
+        this.video.style.zIndex = 'auto';
+    },
+
+    toggleControls: function() {
+        if(this.video.style.zIndex == 666) this.hideControls();
+        else this.showControls();
+    },
+
     pp: function() {
         if(this.video == null) this.init('the-video');
         if(this.duration == null) return;
@@ -1099,10 +1115,8 @@ var TheVideoController = {
 		this.video.onmouseover = function (e) {
             TheVideoController.showControls();
         };
-        //this.video.onmousemove = this.video.onmouseover;
         this.video.onmouseout = function (e) {
-            this.removeAttribute('controls');
-            this.style.zIndex = 'auto';
+            TheVideoController.hideControls();
         };
 
         this.video.ondblclick = function (e) {
