@@ -1086,6 +1086,8 @@ var TheVideoController = {
     },
 
     toggleControls: function() {
+        if(this.video == null) this.init('the-video');
+
         if(this.video.style.zIndex == 666) this.hideControls();
         else this.showControls();
     },
