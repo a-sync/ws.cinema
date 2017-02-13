@@ -666,15 +666,21 @@ function createChatMessage(obj, html){
 	msg.className= 'msg';
 	if(!html) {
         var msgText = esc(unescape(obj.msg));
+        msg.textContent = msgText;
+
         msgText = msgText.split(' ');
-        
+        var preSpace = '';
+        var postSpace = ' ';
         for(var i = 0; i < msgText.length; i++) {
+            if(i > 0) preSpace = ' ';
+            if(i == msgText.length-1) postSpace = '';
             if(msgText[i].substr(0, 7) === 'http://' || msgText[i].substr(0, 8) === 'https://') {
-                msgText[i] = '<a href="'+msgText[i]+'" target="_blank">'+msgText[i]+'</a>';
+                msg.innerHTML = msg.innerHTML.replace(
+                    preSpace + msgText[i] + postSpace, 
+                    preSpace + '<a href="'+msgText[i]+'" target="_blank">'+msgText[i]+'</a>' + postSpace
+                );
             }
         }
-        
-        msg.textContent = msgText.join(' ');
     }
     else msg.innerHTML = html;
     
