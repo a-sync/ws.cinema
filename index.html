@@ -64,6 +64,7 @@ background-color: rgba(0,0,0,0.92);
 box-shadow: 0 0 10px 2px rgba(0,0,0,0.8);
 width:1280px;
 height:720px;
+max-height: calc(100vh - 77px);
 }
 #the-video.full {
 top:0;
@@ -1120,7 +1121,7 @@ function sendGif(img) {
 
 function setVideo() {
     if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov';//http://webtorrent.io/torrents/sintel-1024-surround.mp4
-    
+
     var videoSrc = prompt('Insert video source URL', window.localStorage.lastLoadedSrc);
     TheVideoController.init('the-video');
     TheVideoController.video.onmousemove = function (e) {
@@ -1130,10 +1131,10 @@ function setVideo() {
 
     if(videoSrc !== null && videoSrc.length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
         var ytID = videoSrc.trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-	if(ytID.length > 1) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
-	
-	var to_send = {bc:bcChannel, videoSrc: escape(videoSrc.trim()) };
-	$.achex.send(to_send);
+        if(ytID != null) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
+        //console.log(videoSrc);
+        var to_send = {bc:bcChannel, videoSrc: escape(videoSrc.trim()) };
+        $.achex.send(to_send);
     }
 }
 
@@ -1303,7 +1304,7 @@ var TheVideoController = {
 			if(window.localStorage.volume) this.volume = window.localStorage.volume;
 			$('#pp-btn').animateCss('bounce');
 			
-			window.localStorage.lastLoadedSrc = this.video.currentSrc;
+			window.localStorage.lastLoadedSrc = TheVideoController.video.currentSrc;
 		};
 
 		//this.video.oncanplaythrough = function(e) {
