@@ -2,6 +2,7 @@
 <html class="cinema_bg">
 	<head>
 		<title>WebSocket Video Sync</title>
+		<!-- src @ github.com/a-sync/ws-video-sync -->
 
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="mobile-web-app-capable" content="yes">
@@ -12,10 +13,18 @@
 		<link rel="apple-touch-icon" href="favicon.png">
 		<link rel="stylesheet" href="bootstrap.min.css">
 		<link rel="stylesheet" href="animate.min.css">
-		
+
 		<script src="JQ.js"></script>
 		<script src="jquery.achexws.js"></script>
 		<script>
+$.fn.extend({
+    animateCss: function (animationName) {
+        var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
+        this.addClass('animated ' + animationName).one(animationEnd, function() {
+            $(this).removeClass('animated ' + animationName);
+        });
+    }
+});
 var backgroundCs = [
     {cname:'cinema_bg'},
     {cname:'brokkoli_bg'},
@@ -305,6 +314,10 @@ span.from .cmd-c.hovered {
 i.sys-msg > b:hover {
     color: #fff;
 }
+.user-syncing {
+    color: #a22;
+    text-shadow: 0 0 3px rgba(180, 0, 0, 0.8);
+}
 </style>
 	</head>
 	<body onload="loadInit()">
@@ -326,7 +339,7 @@ i.sys-msg > b:hover {
                         <a id="bookmarklet" onclick="alert(this.title);return false;" class="btn btn-xs" title="Get video source URL from any website. Save this bookmarklet via drag and drop or other method and run while the video is playing on your favorite streaming site." href="javascript:(function()%7Bfunction%20f(e)%7Bvar%20r%3De.getElementsByTagName(%22video%22)%3Bfor(var%20n%20in%20r)if(r%5Bn%5D.readyState%3E0%26%26!r%5Bn%5D.paused)return%20prompt(%22Copy%20video%20source%20URL%22%2Cr%5Bn%5D.currentSrc)%2C!1%3Breturn!0%7Dif(f(window.document)%26%26window.frames.length%3E0)for(var%20c%3D0%3Bwindow.frames.length%3Ec%26%26f(window.frames%5Bc%5D.document)%3B)c%2B%2B%7D)()">BOOKMARKLET</a>
                         <button id="set-video" type="button" class="btn btn-warning btn-xs" onclick="javascript:setVideo()" alt="/video">SET VIDEO</button>
                     </div>
-                    <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:3px;font-size:0.6em" onclick="javascript:TheVideoController.pp()" alt="/p">&#10074;&#10074;&nbsp;&#9658;</button>
+                    <button id="pp-btn" type="button" class="btn btn-info btn-xs round-btn" style="padding-left:3px;font-size:0.6em" onclick="javascript:TheVideoController.pp()" alt="/p">&#10074;&#10074;&nbsp;&#9658;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-left:5px" onclick="javascript:TheVideoController.seek(-10)" alt="/s -10">&#9194;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="" onclick="javascript:TheVideoController.seek(10)" alt="/s +10">&#9193;</button>
                     <button type="button" class="btn btn-info btn-xs round-btn" style="padding-top:1px;font-size:14px" onclick="javascript:TheVideoController.volDn()" alt="/v -10">&#x2212;</button>
@@ -423,7 +436,7 @@ function chatEvent(obj, raw){
                 users[obj.sID] = {c:String(obj.FROM)};
 
                 clearTimeout(refreshUsersTimeout);
-                refreshUsersTimeout = setTimeout(showUsers, 500);
+                refreshUsersTimeout = setTimeout(showUsers, 400);
 
                 if(!TheVideoController.video.currentSrc 
                     && typeof(obj.myCurrSrc) === 'string' 
@@ -444,6 +457,8 @@ function chatEvent(obj, raw){
 
                     TheVideoController.video.src = unescape(obj.myCurrSrc);
                     TheVideoController.video.currentTime = obj.myCurrTime;
+
+                    setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).addClass('user-syncing');setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).removeClass('user-syncing');}, 400);}, 420);
                 }
             }
 		}else if(obj.gif != null) {
@@ -933,7 +948,7 @@ function checkForCmd() {
 function showUsers(){
     $('#chat_users').html('');
     for(var i in users) {
-        $('#chat_users').append('<div title="'+i+'" '+($.achex.sid==i?'class="self-name"':'')+'>'+esc(users[i].c)+'</div>');
+        $('#chat_users').append('<div title="'+i+'" class="'+($.achex.sid==i?'self-name':'wsvs'+i)+'">'+esc(users[i].c)+'</div>');
     }
 }
 // ----
@@ -1120,6 +1135,9 @@ function setSync(){
 	//TODO: make use of TheVideoController.master
 	//console.log('setSync');
 	if(TheVideoController.video){
+        $('#chat_users > div.self-name').addClass('user-syncing');
+        setTimeout(function(){$('#chat_users > div.self-name').removeClass('user-syncing');},400);
+
 		var to_send = {
             bc:bcChannel, 
             timestamp: Date.now(),
@@ -1261,6 +1279,10 @@ var TheVideoController = {
 			TheVideoController.duration = null;
 		};
 
+		this.video.onemptied = function(e) {
+            $('#set-video').animateCss('shake');
+        };
+
 		//vid.ontimeupdate = function(e) {};
 
 		this.video.onloadedmetadata = function(e) {
@@ -1273,7 +1295,7 @@ var TheVideoController = {
 			//TheVideoController.showControls();
 			
 			if(window.localStorage.volume) this.volume = window.localStorage.volume;
-			
+			$('#pp-btn').animateCss('bounce');
 		};
 
 		//this.video.oncanplaythrough = function(e) {
@@ -1348,6 +1370,9 @@ var TheVideoController = {
         if(!obj || this.master || obj.sID == $.achex.sid) return;
         //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
         if(!isNaN(this.lastSyncTimeStamp) && obj.timestamp < this.lastSyncTimeStamp) return;
+        
+        $('#chat_users > div.wsvs'+String(obj.sID)).addClass('user-syncing');
+        setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).removeClass('user-syncing');},400);
 
         if(this.video.currentTime != obj.videoCurrTime && !obj.videoPaused) {
             obj.videoCurrTime += (Date.now() - obj.timestamp) / 1000;
@@ -1514,7 +1539,6 @@ function notifyMe(title, body, callback) {
 */
 </script>
         
-        
-        <!-- src @ github.com/a-sync/ws-video-sync -->
+
 	</body>
 </html>
