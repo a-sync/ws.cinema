@@ -123,7 +123,7 @@ padding: 5px;
 }
 #chat_window>div{
 display: inline-block;
-background: linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%); 
+background: linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%); 
 border-radius:7px;
 box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
 padding: 5px;
@@ -144,7 +144,7 @@ max-height: 400px;
 vertical-align: bottom;
 }
 #chat_users>div{
-background:linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%); 
+background:linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%); 
 padding: 5px 10px 5px 0;
 border-radius:7px;
 box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
@@ -285,7 +285,7 @@ min-height: 40px;
     background-color: rgba(150, 0, 0, 0.96);
 }
 span.from > b.cmd-c {
-    background:linear-gradient(135deg, rgba(0,0,0,0) 0%,rgba(20,20,20,0.80) 100%);
+    background:linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%);
     border-radius: 4px;
     padding: 0;
     text-align: center;
@@ -622,7 +622,7 @@ function sendChat(){
                 +'<br><b>/sync</b> (broadcast playback properties) '
               //+'<br><b>/master</b> '
               //+'<br><b>/snap</b> 0-100 (quality)'
-            ,' '+cmdCharsList);
+            ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
                 +'<br><b>/cb, /c</b> (toggle control bar) '
@@ -635,7 +635,7 @@ function sendChat(){
                 +'<br><b>/p</b> (toggle play / pause) '
                 +'<br><b>/seek, /s</b> m:s (or &#177;int) '
                 +'<br><b>/fullscreen, /fs</b> '
-            ,' Available commands');
+            ,' '+cmdCharsList);
             lastUser = null;
 
             var allCmdModeChars = ['?',':', '/'];
