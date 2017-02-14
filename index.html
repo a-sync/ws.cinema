@@ -613,7 +613,7 @@ function sendChat(){
             setRoom(str.split(' ')[1]);
         }
         else if(str === '/help' || str === '/man') {
-            var cmdCharsList = '<b class="cmd-c">/</b> ';
+            var cmdCharsList = '<b class="cmd-c hovered">/</b> ';
             for(var i = 0; i < cmdModeChars.length; i++) cmdCharsList += '<b class="cmd-c">'+cmdModeChars[i]+'</b> ';
             lastUser = null;
             htmlToSelf('<b>/mute</b> '
