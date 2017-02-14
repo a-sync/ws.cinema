@@ -739,7 +739,7 @@ function createChatMessage(obj, html){
 
 	msg.className = 'msg';
 	if(!html) {
-        var msgText = esc(unescape(obj.msg));
+        var msgText = unescape(obj.msg);
         msg.textContent = msgText;
 
         msgText = msgText.split(' ');
@@ -751,7 +751,7 @@ function createChatMessage(obj, html){
             if(msgText[i].substr(0, 7) === 'http://' || msgText[i].substr(0, 8) === 'https://') {
                 msg.innerHTML = msg.innerHTML.replace(
                     preSpace + msgText[i] + postSpace, 
-                    preSpace + '<a href="'+msgText[i]+'" target="_blank">'+msgText[i]+'</a>' + postSpace
+                    preSpace + '<a href="'+esc(msgText[i])+'" target="_blank">'+esc(msgText[i])+'</a>' + postSpace
                 );
             }
         }
