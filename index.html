@@ -1202,13 +1202,17 @@ var TheVideoController = {
             if(this.video != null) {
                 var s = valStr.split(' ')[1];
                 var v = parseInt(s);
+
                 if(s.slice(0,1) === '-' || s.slice(0,1) === '+') v = this.video.volume + (v / 100);
-                else v = v/100;
-                if(v >= 0 && v <= 1) {
-                    if(this.video.muted) this.video.muted = false;
-                    window.localStorage.volume = v;
-                    this.video.volume = v;
-                }
+                else v = v / 100;
+
+                if(v < 0) v = 0;
+                else if(v > 1) v = 1;
+
+                if(this.video.muted) this.video.muted = false;
+                window.localStorage.volume = v;
+                this.video.volume = v;
+
                 return true;
             }
             return false;
