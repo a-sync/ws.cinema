@@ -657,7 +657,7 @@ function sendChat(){
             
             var cmdCharElemList = document.querySelectorAll('span.from > b.cmd-c');
             for(var i = 0; i < cmdCharElemList.length; i++) {
-                if(i == 0) cmdCharElemList[i].parentNode.style.textDecoration = 'none';
+                cmdCharElemList[i].parentNode.style.textDecoration = 'none';
                 cmdCharElemList[i].onmouseover = replaceCmdCharsInHelp;
             }
         }
