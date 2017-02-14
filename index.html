@@ -11,8 +11,9 @@
 		<link rel="icon" href="favicon.png">
 		<link rel="apple-touch-icon" href="favicon.png">
 		<link rel="stylesheet" href="bootstrap.min.css">
+		<link rel="stylesheet" href="animate.min.css">
+		
 		<script src="JQ.js"></script>
-		<!-- <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
 		<script src="jquery.achexws.js"></script>
 		<script>
 var backgroundCs = [
@@ -209,10 +210,12 @@ border: 2px solid transparent;
 margin-bottom: 2px;
 }
 #chat-tooltip>img.highlighted {
-box-shadow: 1px 1px 10px 4px rgba(0, 125, 255, 0.8);
+box-shadow: 0px 0px 16px 6px rgba(0, 125, 255, 0.8);
+position:relative;
+z-index:66;
 }
 #chat-tooltip>img:active {
-box-shadow: 1px 1px 10px 4px rgba(255, 125, 0, 0.8);
+box-shadow: 0px 0px 16px 6px rgba(255, 125, 0, 0.8);
 }
 
 .self-name {
@@ -387,6 +390,7 @@ function cc(){
 }
 
 var refreshTimeout = null;
+var refreshUsersTimeout = null;
 function chatEvent(obj, raw){
 	//logf(raw);
 	//console.log(obj, raw);
@@ -412,9 +416,11 @@ function chatEvent(obj, raw){
 			$.achex.send(to_send);
 		}else if(obj.inroom != null){
             if(obj.inroom == channel){
-                showUsers();
                 users[obj.sID] = {c:String(obj.FROM)};
-                showUsers();
+
+                clearTimeout(refreshUsersTimeout);
+                refreshUsersTimeout = setTimeout(showUsers, 500);
+
                 if(!TheVideoController.video.currentSrc 
                     && typeof(obj.myCurrSrc) === 'string' 
                     && (unescape(obj.myCurrSrc).slice(0, 7) === 'http://' 
@@ -737,6 +743,7 @@ function createChatMessage(obj, html){
 	}
 
     lastUser = obj.sID;
+    re.className = 'animated fadeInUp';
 	return re;
 }
 
@@ -812,7 +819,11 @@ window.onkeydown = function(e) {
     }
     
     var highlighted = $('#chat-tooltip > img.highlighted');
-    if(highlighted.length === 0 && e.keyCode !== 27) setHighlightedGif($('#chat-tooltip > img').get(0));
+    if(highlighted.length === 0 && e.keyCode !== 27) {
+        var findAboveInput = findInSiblings($('#chat-tooltip > img').last(), $('#chat-tooltip > img'));
+        if(findAboveInput != null) setHighlightedGif(findAboveInput);
+        else setHighlightedGif($('#chat-tooltip > img').get(0));
+    }
     else {
         var newHighlighted = null;
         switch(e.keyCode){
@@ -878,8 +889,8 @@ function checkForCmd() {
 	}
 }*/
 function showUsers(){
-	if(users.length == 0) $('#chat_users').html('');
-	for(var i in users) {
+    $('#chat_users').html('');
+    for(var i in users) {
         $('#chat_users').append('<div title="'+i+'" '+($.achex.sid==i?'class="self-name"':'')+'>'+esc(users[i].c)+'</div>');
     }
 }
@@ -954,6 +965,7 @@ function destroyGifSearch() {
 function showGifs(data) {
     if(!!data.images) data = [data];
     $('#chat-tooltip').removeClass('loading');
+    currHistoryEntry = null;
     for(var i = 0; i < data.length; i++) {
         var img = new Image();
         
