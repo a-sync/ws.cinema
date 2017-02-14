@@ -757,11 +757,14 @@ input.onkeypress = function(e){
 	switch(e.keyCode){
 		case 13:
             if(tmp.slice(0, 9) === '/giflate ' 
-            || (tmp.slice(0, 5) === '/gif ') 
+            || tmp.slice(0, 5) === '/gif ' 
             || tmp === '/gif' 
+            || tmp === '/gif ' 
             || tmp.slice(0, 11) === '/sticklate ' 
-            || (tmp.slice(0, 9) === '/sticker ') 
-            || tmp === '/sticker' ) {
+            || tmp.slice(0, 9) === '/sticker ' 
+            || tmp === '/sticker' 
+            || tmp === '/sticker ' 
+            ) {
                 var highlighted = $('#chat-tooltip > img.highlighted');
                 if(highlighted.length !== 0) {
                     sendGif(highlighted.get(0));
@@ -887,7 +890,7 @@ function checkForCmd() {
     if(tmp.slice(0, 9) === '/giflate ' && tmp.length > 9) {
         gifSearchMaybe('gifs/translate?s='+encodeURI(tmp.substr(9))+'&');
     }
-    else if(tmp.trim() === '/gif') {
+    else if(tmp === '/gif' || tmp === '/gif ') {
         gifSearchMaybe('gifs/trending?');
     }
     else if(tmp.slice(0, 5) === '/gif ' && tmp.length > 5) {
@@ -896,7 +899,7 @@ function checkForCmd() {
     else if(tmp.slice(0, 11) === '/sticklate ' && tmp.length > 11) {
         gifSearchMaybe('stickers/translate?s='+encodeURI(tmp.substr(11))+'&');
     }
-    else if(tmp.trim() === '/sticker') {
+    else if(tmp === '/sticker' || tmp === '/sticker ') {
         gifSearchMaybe('stickers/trending?');
     }
     else if(tmp.slice(0, 9) === '/sticker ' && tmp.length > 9) {
