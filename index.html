@@ -753,14 +753,15 @@ var input = document.getElementById('chat_input');
 
 input.onkeypress = function(e){
     //console.log('onkeypress', e.keyCode);
+    var tmp = cmdModeCharsReplacer(input.value);
 	switch(e.keyCode){
 		case 13:
-            if(input.value.slice(0, 9) === '/giflate ' 
-            || (input.value.slice(0, 5) === '/gif ') 
-            || input.value === '/gif' 
-            || input.value.slice(0, 9) === '/sticklate ' 
-            || (input.value.slice(0, 9) === '/sticker ') 
-            || input.value === '/sticker' ) {
+            if(tmp.slice(0, 9) === '/giflate ' 
+            || (tmp.slice(0, 5) === '/gif ') 
+            || tmp === '/gif' 
+            || tmp.slice(0, 11) === '/sticklate ' 
+            || (tmp.slice(0, 9) === '/sticker ') 
+            || tmp === '/sticker' ) {
                 var highlighted = $('#chat-tooltip > img.highlighted');
                 if(highlighted.length !== 0) {
                     sendGif(highlighted.get(0));
@@ -768,7 +769,25 @@ input.onkeypress = function(e){
             }
             else sendChat();
 		break;
+		case 37:
+		case 38:
+		case 39:
+		case 40:
+            //e.preventDefault();  
+            //e.returnValue = false;
+            //e.cancelBubble = true;
+            //return false;
+		break;
 	}
+};
+
+input.onkeydown = function(e) {
+    if($('#chat-tooltip > img').length > 0 && 37 <= e.keyCode && e.keyCode <= 40) {
+        e.preventDefault();  
+        //e.returnValue = false;
+        //e.cancelBubble = true;
+        return false;
+    }
 };
 
 var currHistoryEntry = null;
@@ -825,6 +844,8 @@ window.onkeydown = function(e) {
         var findAboveInput = findInSiblings($('#chat-tooltip > img').last(), $('#chat-tooltip > img'));
         if(findAboveInput != null) setHighlightedGif(findAboveInput);
         else setHighlightedGif($('#chat-tooltip > img').get(0));
+
+
     }
     else {
         var newHighlighted = null;
@@ -853,33 +874,33 @@ window.onkeydown = function(e) {
         //console.log('newHighlighted', newHighlighted);
         if(newHighlighted !== null && newHighlighted.length !== 0) setHighlightedGif(newHighlighted.get(0));
     }
+
+    e.preventDefault();  
+    return false;
 };
 
 input.onkeyup = function(e) {
     setTimeout(checkForCmd, 0);
 };
 function checkForCmd() {
-    if(input.value.slice(0, 9) === '/giflate ' && input.value.length > 9) {
-        gifSearchMaybe('gifs/translate?s='+encodeURI(input.value.substr(9))+'&');
+    var tmp = cmdModeCharsReplacer(input.value);
+    if(tmp.slice(0, 9) === '/giflate ' && tmp.length > 9) {
+        gifSearchMaybe('gifs/translate?s='+encodeURI(tmp.substr(9))+'&');
     }
-    else if(input.value.slice(0, 4) === '/gif') {
-        if(input.value.slice(0, 5) === '/gif ' && input.value.length > 5) {
-            gifSearchMaybe('gifs/search?q='+encodeURI(input.value.substr(5))+'&');
-        }
-        else {
-            gifSearchMaybe('gifs/trending?');
-        }
+    else if(tmp.trim() === '/gif') {
+        gifSearchMaybe('gifs/trending?');
     }
-    else if(input.value.slice(0, 11) === '/sticklate ' && input.value.length > 11) {
-        gifSearchMaybe('stickers/translate?s='+encodeURI(input.value.substr(11))+'&');
+    else if(tmp.slice(0, 5) === '/gif ' && tmp.length > 5) {
+        gifSearchMaybe('gifs/search?q='+encodeURI(tmp.substr(5))+'&');
     }
-    else if(input.value.slice(0, 8) === '/sticker') {
-        if(input.value.slice(0, 9) === '/sticker ' && input.value.length > 9) {
-            gifSearchMaybe('stickers/search?q='+encodeURI(input.value.substr(9))+'&');
-        }
-        else {
-            gifSearchMaybe('stickers/trending?');
-        }
+    else if(tmp.slice(0, 11) === '/sticklate ' && tmp.length > 11) {
+        gifSearchMaybe('stickers/translate?s='+encodeURI(tmp.substr(11))+'&');
+    }
+    else if(tmp.trim() === '/sticker') {
+        gifSearchMaybe('stickers/trending?');
+    }
+    else if(tmp.slice(0, 9) === '/sticker ' && tmp.length > 9) {
+        gifSearchMaybe('stickers/search?q='+encodeURI(tmp.substr(9))+'&');
     }
     else {
         destroyGifSearch();
