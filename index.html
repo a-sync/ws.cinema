@@ -372,6 +372,8 @@ function loadInit() {
     setBg();
     setPoster();
 
+    TheVideoController.init('the-video');
+
     if(!input) input = document.getElementById('chat_input');
     input.focus();
     window.onclick = function() {
@@ -395,16 +397,44 @@ function chatEvent(obj, raw){
 			// received chat
 			rcvChat(obj);
 		}else if(obj.check != null){
-            if(obj.awake != null) {
-			    users = [];
-			    clearTimeout(refreshTimeout);
-			    refreshTimeout = setTimeout(refreshUserList, 60000);
-			}
-			// in channel info
-			$.achex.send({bc:bcChannel, inroom: channel});
+            //console.log(obj);
+            users = [];
+            clearTimeout(refreshTimeout);
+            refreshTimeout = setTimeout(refreshUserList, 60000);
+
+			var to_send = {
+                bc:bcChannel, 
+                inroom: channel, 
+                myCurrSrc: escape(TheVideoController.video.currentSrc), 
+                myCurrTime: TheVideoController.video.currentTime
+			};
+			//console.log(to_send);
+			$.achex.send(to_send);
 		}else if(obj.inroom != null){
             if(obj.inroom == channel){
+                showUsers();
                 users[obj.sID] = {c:String(obj.FROM)};
+                showUsers();
+                if(!TheVideoController.video.currentSrc 
+                    && typeof(obj.myCurrSrc) === 'string' 
+                    && (unescape(obj.myCurrSrc).slice(0, 7) === 'http://' 
+                        || unescape(obj.myCurrSrc).slice(0, 8) === 'https://') 
+                    && unescape(obj.myCurrSrc) != TheVideoController.video.currentSrc
+                ) {
+                    TheVideoController.lastSyncTimeStamp = Date.now();
+                    TheVideoController.lastSyncObj = {videoCurrTime: obj.myCurrTime};
+
+                    if(TheVideoController.ignoreDelay > 0) {
+                        TheVideoController.ignoreEvents = true;
+                        if(TheVideoController.ignoreEventsTimer) clearTimeout(TheVideoController.ignoreEventsTimer);
+                        TheVideoController.ignoreEventsTimer = setTimeout(function(){
+                            TheVideoController.ignoreEvents = false;
+                        }, TheVideoController.ignoreDelay);
+                    }
+
+                    TheVideoController.video.src = unescape(obj.myCurrSrc);
+                    TheVideoController.video.currentTime = obj.myCurrTime;
+                }
             }
 		}else if(obj.gif != null) {
             var type = obj.gif.slice(-9);
@@ -430,9 +460,7 @@ function chatEvent(obj, raw){
 		else if(obj.poster != null) {
             document.getElementById('the-video').setAttribute('poster', unescape(obj.poster));
 		}
-		
-		showUsers();
-		
+
 	}else if(obj.FROM && obj.FROM != username){
 		if( obj.check == 'ticket'){
 			$.achex.send({bc:bcChannel, inroom: channel});
@@ -442,10 +470,25 @@ function chatEvent(obj, raw){
 	}
 }
 
+// dec2hex :: Integer -> String
+function dec2hex (dec) {
+    return ('0' + dec.toString(16)).substr(-2)
+}
+// generateId :: Integer -> String
+function generateId(len) {
+    var arr = new Uint8Array((len || 40) / 2)
+    window.crypto.getRandomValues(arr)
+    return Array.from(arr).map(dec2hex).join('')
+}
+
+while(!window.localStorage.password) {
+    window.localStorage.password = generateId();
+}
+
 $.achex({
     dbg: 0,
 	username: username,
-	password:'none',
+	password:window.localStorage.password||'*',
 	reconnect: 3000,
 	logo:{canvas:'logo', size:25},
 	fade: true,
@@ -835,10 +878,10 @@ function checkForCmd() {
 	}
 }*/
 function showUsers(){
-	$('#chat_users').html('');
-	for(var i in users){
-		$('#chat_users').append('<div title="'+i+'" '+($.achex.sid==i?'class="self-name"':'')+'>'+esc(users[i].c)+'</div>');
-	}
+	if(users.length == 0) $('#chat_users').html('');
+	for(var i in users) {
+        $('#chat_users').append('<div title="'+i+'" '+($.achex.sid==i?'class="self-name"':'')+'>'+esc(users[i].c)+'</div>');
+    }
 }
 // ----
 
@@ -1007,7 +1050,7 @@ function sendGif(img) {
 }
 
 function setVideo() {
-    var videoSrc = prompt('Insert video source URL', 'http://webtorrent.io/torrents/sintel-1024-surround.mp4');//http://clips.vorwaerts-gmbh.de/VfE_html5.mp4
+    var videoSrc = prompt('Insert video source URL', 'http://media.w3.org/2010/05/bunny/movie.mp4');//http://webtorrent.io/torrents/sintel-1024-surround.mp4
     TheVideoController.init('the-video');
     TheVideoController.video.onmousemove = function (e) {
         TheVideoController.showControls();
@@ -1066,28 +1109,21 @@ var TheVideoController = {
 	},
 
     showControls: function() {
-        if(this.video == null) this.init('the-video');
-
         this.video.setAttribute('controls', 'controls');
         this.video.style.zIndex = 666;
     },
 
     hideControls: function() {
-        if(this.video == null) this.init('the-video');
-
         this.video.removeAttribute('controls');
         this.video.style.zIndex = 'auto';
     },
 
     toggleControls: function() {
-        if(this.video == null) this.init('the-video');
-
         if(this.video.style.zIndex == 666) this.hideControls();
         else this.showControls();
     },
 
     pp: function() {
-        if(this.video == null) this.init('the-video');
         if(this.duration == null) return;
 
         try {
@@ -1132,6 +1168,7 @@ var TheVideoController = {
                 else v = v/100;
                 if(v >= 0 && v <= 1) {
                     if(this.video.muted) this.video.muted = false;
+                    window.localStorage.volume = v;
                     this.video.volume = v;
                 }
                 return true;
@@ -1157,10 +1194,16 @@ var TheVideoController = {
         this.video.ondblclick = function (e) {
             TheVideoController.pp();
         };
+        
+        this.video.onvolumechange = function(e) {
+            window.localStorage.volume = this.volume;
+        };
 
 		this.video.onloadstart = function(e) {
 			TheVideoController.duration = null;
 		};
+
+		//vid.ontimeupdate = function(e) {};
 
 		this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
@@ -1170,6 +1213,9 @@ var TheVideoController = {
 			TheVideoController.duration = this.duration;
 			
 			//TheVideoController.showControls();
+			
+			if(window.localStorage.volume) this.volume = window.localStorage.volume;
+			
 		};
 
 		//this.video.oncanplaythrough = function(e) {
@@ -1245,8 +1291,6 @@ var TheVideoController = {
         //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
         if(!isNaN(this.lastSyncTimeStamp) && obj.timestamp < this.lastSyncTimeStamp) return;
 
-        if(this.video == null) this.init('the-video');
-
         if(this.video.currentTime != obj.videoCurrTime && !obj.videoPaused) {
             obj.videoCurrTime += (Date.now() - obj.timestamp) / 1000;
         }
@@ -1262,7 +1306,6 @@ var TheVideoController = {
             }, this.ignoreDelay);
         }
 
-        
         if(this.video.currentSrc != unescape(obj.videoCurrSrc)) {
             this.video.src = unescape(obj.videoCurrSrc);
             this.video.load();
@@ -1283,7 +1326,6 @@ var TheVideoController = {
     pause: function(set){},
 
     fullScreen: function() {
-        if(this.video == null) this.init('the-video');
 
         if(this.video.className === 'full') {
             exitFs();
@@ -1370,7 +1412,7 @@ document.onpaste = function (event) {
     }
 
     if (blob !== null) {
-        console.log('pasted image', type);
+        //console.log('pasted image', type);
         //var file = new File([blob], 'poster.png', {type: type});
 
         var reader = new FileReader();
