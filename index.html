@@ -160,6 +160,7 @@ bottom: 7px;
 right: 12px;
 text-align: right;
 padding-top: 5px;
+cursor:default;
 }
 #chat-input-container button {
 color: #222;
@@ -447,7 +448,7 @@ function chatEvent(obj, raw){
             if(type === '/100.webp') {
                 obj.gif = obj.gif.slice(0, obj.gif.length-9)+'/200.webp';
             }
-            rcvChat(obj, '<img width="'+(obj.width*2)+'" src="'+obj.gif+'" class="msg-gif loading" onload="this.className=\'msg-gif\'" />');
+            rcvChat(obj, '<img width="'+(obj.width*2)+'" '+(obj.width>190?'':'height="'+(obj.height*2)+'"')+' src="'+obj.gif+'" class="msg-gif loading" onload="this.className=\'msg-gif\'" />');
 		}
 		else if(obj.videoSrc != null) {
             TheVideoController.init('the-video');
@@ -661,7 +662,7 @@ function sendChat(){
             }
         }
         else {
-            var to_send = {bc:bcChannel, channel: channel, msg : escape(str) };
+            var to_send = {bc:bcChannel, channel: channel, msg : escape(input.value) };
             $.achex.send(to_send);
             //console.log(to_send);
         }
@@ -705,7 +706,7 @@ function createChatMessage(obj, html){
 	from.className = 'from';
 	from.innerHTML = obj.FROM;
 
-	msg.className= 'msg';
+	msg.className = 'msg';
 	if(!html) {
         var msgText = esc(unescape(obj.msg));
         msg.textContent = msgText;
@@ -737,13 +738,14 @@ function createChatMessage(obj, html){
         re.appendChild(from);
         re.appendChild(document.createElement('br'));
         re.appendChild(msg);
+        re.className = 'animated fadeInRight';
 	}
 	else {
         re = msg;
+        re.className = 'msg animated fadeInUp';
 	}
 
     lastUser = obj.sID;
-    re.className = 'animated fadeInUp';
 	return re;
 }
 
