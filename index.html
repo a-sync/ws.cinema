@@ -471,8 +471,9 @@ function chatEvent(obj, raw){
 		}
 		else if(obj.videoSrc != null) {
             if(TheVideoController.video.currentSrc != unescape(obj.videoSrc)) {
+                var curr = TheVideoController.video.currentSrc;
                 TheVideoController.video.src = unescape(obj.videoSrc);
-                setTimeout(TheVideoController.video.load, 20);
+                TheVideoController.video.load();
             }
             else TheVideoController.video.load();
 		}
