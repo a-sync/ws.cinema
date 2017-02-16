@@ -470,11 +470,11 @@ function chatEvent(obj, raw){
             rcvChat(obj, '<img width="'+(obj.width*2)+'" '+(obj.width>190?'':'height="'+(obj.height*2)+'"')+' src="'+obj.gif+'" class="msg-gif loading" onload="this.className=\'msg-gif\'" />');
 		}
 		else if(obj.videoSrc != null) {
-            TheVideoController.init('the-video');
             if(TheVideoController.video.currentSrc != unescape(obj.videoSrc)) {
                 TheVideoController.video.src = unescape(obj.videoSrc);
-                TheVideoController.video.load();
+                setTimeout(TheVideoController.video.load, 20);
             }
+            else TheVideoController.video.load();
 		}
 		else if(obj.snap != null) {
             rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" onload="this.className=\'msg-snap\'" />');
@@ -1123,7 +1123,6 @@ function setVideo() {
     if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov';//http://webtorrent.io/torrents/sintel-1024-surround.mp4
 
     var videoSrc = prompt('Insert video source URL', window.localStorage.lastLoadedSrc);
-    TheVideoController.init('the-video');
     TheVideoController.video.onmousemove = function (e) {
         TheVideoController.showControls();
         TheVideoController.video.onmousemove = null;
@@ -1304,7 +1303,7 @@ var TheVideoController = {
 			if(window.localStorage.volume) this.volume = window.localStorage.volume;
 			$('#pp-btn').animateCss('bounce');
 			
-			window.localStorage.lastLoadedSrc = TheVideoController.video.currentSrc;
+			window.localStorage.lastLoadedSrc = this.currentSrc;
 		};
 
 		//this.video.oncanplaythrough = function(e) {
@@ -1316,10 +1315,10 @@ var TheVideoController = {
 		//};
 
 		this.video.onpause = function(e) {
-            //console.log('onpause', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            //console.log('onpause', this.currentTime, TheVideoController.lastSyncObj);
             if(!TheVideoController.ignoreEvents) {
                 if( TheVideoController.lastSyncObj == null 
-                    || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
+                    || this.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
                 ) {
                     //console.log('pause sync');
                     setSync();
@@ -1328,7 +1327,7 @@ var TheVideoController = {
 		};
 
 		this.video.onplay = function(e) {
-            //console.log('onplay', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            //console.log('onplay', this.currentTime, TheVideoController.lastSyncObj);
             if(!TheVideoController.ignoreEvents) {
                 //console.log('play sync');
                 setSync();
@@ -1336,14 +1335,14 @@ var TheVideoController = {
 		};
 
 		//this.video.onplaying = function(e) {
-        //    console.log('onplaying', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+        //    console.log('onplaying', this.currentTime, TheVideoController.lastSyncObj);
 		//};
 
 		this.video.onseeked = function(e) {
-            //console.log('onseeked', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+            //console.log('onseeked', this.currentTime, TheVideoController.lastSyncObj);
             if(!TheVideoController.ignoreEvents) {
                 if( TheVideoController.lastSyncObj == null 
-                    || TheVideoController.video.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
+                    || this.currentTime != TheVideoController.lastSyncObj.videoCurrTime 
                 ) {
                     //console.log('seeked sync');
                     setSync();
@@ -1351,13 +1350,13 @@ var TheVideoController = {
             }
 		};
 
-		this.video.onwaiting = function(e) {
-            //console.log('onwaiting', TheVideoController.video.currentTime, TheVideoController.lastSyncObj);
+		//this.video.onwaiting = function(e) {
+            //console.log('onwaiting', this.currentTime, TheVideoController.lastSyncObj);
             //if(channel) {
             //    var to_send = {bc:bcChannel, channel: channel, msg: escape('Buffering @ '+this.currentTime) };
             //    $.achex.send(to_send);
             //}
-		};
+		//};
 
 		//TODO: onwebkitfullscreenchange = use notifications
 	},
