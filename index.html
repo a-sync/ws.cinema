@@ -477,6 +477,9 @@ function chatEvent(obj, raw){
             }
             else TheVideoController.video.load();
 		}
+		else if(obj.subSrc != null) {
+            TheVideoController.addSub(unescape(obj.subSrc));
+		}
 		else if(obj.snap != null) {
             rcvChat(obj, '<img src="'+unescape(obj.snap)+'" class="msg-snap loading" onload="this.className=\'msg-snap\'" />');
 		}
@@ -629,6 +632,21 @@ function sendChat(){
                 && str.split(' ').length > 1 && str.split(' ')[1] !== '') {
             setRoom(str.split(' ')[1]);
         }
+        else if(str === '/subtitle' || str === '/sub') {
+            setSubtitle();
+        }
+        else if(str.slice(0, 6) === '/cors ' && !isNaN(str.split(' ')[1])) {
+            switch(parseInt(str.split(' ')[1])) {
+                case 1: TheVideoController.setCORS('anonymous');
+                    htmlToSelf('Video CORS policy set to anonymous.');
+                    break;
+                case 2: TheVideoController.setCORS('use-credentials');
+                    htmlToSelf('Video CORS policy set to use-credentials.');
+                    break;
+                default: TheVideoController.setCORS();
+                    htmlToSelf('Video CORS policy removed.');
+            }
+        }
         else if(str === '/help' || str === '/man') {
             var cmdCharsList = '<b class="cmd-c hovered">/</b> ';
             for(var i = 0; i < cmdModeChars.length; i++) cmdCharsList += '<b class="cmd-c">'+cmdModeChars[i]+'</b> ';
@@ -646,7 +664,9 @@ function sendChat(){
                 +'<br><b>/room, /r</b> roomname (switch to room) '
               //+'<br><b>/sync</b> (broadcast playback properties) '
               //+'<br><b>/master</b> '
-              //+'<br><b>/snap</b> 0-100 (quality)'
+              //+'<br><b>/snap</b> 0-100 (quality) '
+              //+'<br><b>/subtitle, /sub</b> '
+              //+'<br><b>/cors</b> 0-2 (CORS policy) '
             ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
@@ -1133,7 +1153,18 @@ function setVideo() {
         var ytID = videoSrc.trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
         if(ytID != null) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
         //console.log(videoSrc);
-        var to_send = {bc:bcChannel, videoSrc: escape(videoSrc.trim()) };
+        var to_send = {bc:bcChannel, videoSrc: escape(videoSrc.trim())};
+        $.achex.send(to_send);
+    }
+}
+
+function setSubtitle() {
+    if(!window.localStorage.lastLoadedSub) window.localStorage.lastLoadedSub = '';
+
+    var subSrc = prompt('Insert subtitle (*.vtt) source URL', window.localStorage.lastLoadedSub);
+
+    if(subSrc !== null && subSrc.length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
+        var to_send = {bc:bcChannel, subSrc: escape(subSrc.trim())};
         $.achex.send(to_send);
     }
 }
@@ -1259,11 +1290,30 @@ var TheVideoController = {
             return false;
     },
 
-    volUp: function(){
+    volUp: function() {
         this.setVol(':v +10');
     },
-    volDn: function(){
+    volDn: function() {
         this.setVol(':v -10');
+    },
+
+    addSub: function(url, label, lang) {
+        //if(this.video.textTracks.length &&) return;
+
+        var track = document.createElement('track');
+        track.kind = 'captions';
+        track.label = label||'English';
+        track.srclang = lang||'en';
+        track.src = url;
+        track.onload = function(){
+            this.mode = 'showing';
+        }
+        this.video.appendChild(track);
+    },
+
+    setCORS: function(val){
+        if(!val) this.video.removeAttribute('crossorigin');
+        else this.video.setAttribute('crossorigin', val);
     },
 
 	addListeners: function() {
