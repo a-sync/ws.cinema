@@ -666,7 +666,7 @@ function sendChat(){
               //+'<br><b>/master</b> '
               //+'<br><b>/snap</b> 0-100 (quality) '
               //+'<br><b>/subtitle, /sub</b> '
-              //+'<br><b>/cors</b> 0-2 (CORS policy) '
+              //+'<br><b>/cors</b> 0-2 (set CORS policy) '
             ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
@@ -1299,6 +1299,7 @@ var TheVideoController = {
 
     addSub: function(url, label, lang) {
         //if(this.video.textTracks.length &&) return;
+        window.localStorage.lastLoadedSub = url;
 
         var track = document.createElement('track');
         track.kind = 'captions';
