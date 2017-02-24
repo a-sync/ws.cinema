@@ -1304,10 +1304,12 @@ var TheVideoController = {
     addSub: function(url, label, lang) {
         //if(this.video.textTracks.length &&) return;
         window.localStorage.lastLoadedSub = url;
+        
+        var temp = url.split('/');
 
         var track = document.createElement('track');
         track.kind = 'captions';
-        track.label = label||'English';
+        track.label = label||temp[temp.length-1];
         track.srclang = lang||'en';
         track.src = url;
         track.onload = function(){
