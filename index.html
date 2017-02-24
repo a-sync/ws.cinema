@@ -26,6 +26,7 @@ $.fn.extend({
     }
 });
 var backgroundCs = [
+    {cname:'black_bg'},
     {cname:'cinema_bg'},
     {cname:'brokkoli_bg'},
     {cname:'cosmos_bg'},
@@ -37,7 +38,7 @@ function setBg(newBgNum) {
         || isNaN(window.localStorage.currBg) 
         || typeof(backgroundCs[window.localStorage.currBg]) !== 'object') {
         
-        window.localStorage.currBg = 0;
+        window.localStorage.currBg = 1;
     }
 
     if(isNaN(newBgNum) || typeof(backgroundCs[newBgNum]) !== 'object') {
@@ -232,7 +233,10 @@ box-shadow: 0px 0px 16px 6px rgba(255, 125, 0, 0.8);
 .self-name {
 font-weight: bold;
 }
-
+.black_bg{
+background-image: none;
+background-color: black;
+}
 .cinema_bg{
 background-image:url('cinema.jpg');
 background-repeat: no-repeat;
