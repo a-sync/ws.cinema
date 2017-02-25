@@ -13,6 +13,7 @@
 		<link rel="apple-touch-icon" href="favicon.png">
 		<link rel="stylesheet" href="bootstrap.min.css">
 		<link rel="stylesheet" href="animate.min.css">
+		<link rel="stylesheet" href="styles.css">
 
 		<script src="JQ.js"></script>
 		<script src="jquery.achexws.js"></script>
@@ -48,282 +49,8 @@ function setBg(newBgNum) {
 
     document.getElementsByTagName('html')[0].className = backgroundCs[newBgNum].cname;
 }
-		</script>
-<style>
-html{
-    background-color: #000;
-    color: #ededed;
-}
-body{
-background: none transparent;
-color: #ededed;
-}
-#the-video {
-position: relative;
-top: 35px;
-background-color: rgba(0,0,0,0.92);
-box-shadow: 0 0 10px 2px rgba(0,0,0,0.8);
-width:1280px;
-height:720px;
-max-height: calc(100vh - 77px);
-}
-#the-video.full {
-top:0;
-width:100%;
-height:auto;
-box-shadow: 0 0 30px 15px #000;
-max-height: calc(100vh - 42px);
-}
-#logo{
-vertical-align: bottom;
-}
-.from{
-padding-top:10px;
-font-weight:bold;
-text-decoration: underline;
-}
-.msg{
-color:#ededed;
-padding: 5px;
-/*display: inline-block;*/
-}
-.msg a {
-    color: #2cf;
-}
-.msg a:hover {
-    color: #0ff;
-}
-.msg a:visited {
-    color: #09d;
-}
-.sys-msg {
-    color: #baf;
-}
+        </script>
 
-#chat_cont{
-display:table;
-text-align:left;
-position:fixed;
-bottom: 40px;
-width: 100%;
-}
-#chat_cont> div{
-display:table-row;
-}
-#chat_cont > div> div{
-display:table-cell;
-vertical-align: bottom;
-}
-#users-title {
-text-align: center;
-padding: 5px;
-visibility: hidden;
-}
-#username-container {
-visibility: hidden;
-}
-#username{
-font-weight:bold;
-color: #fafafa;
-padding: 5px;
-}
-
-#chat_window{
-text-align:right;
-padding: 5px;
-}
-#chat_window>div{
-display: inline-block;
-background: linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%); 
-border-radius:7px;
-box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
-padding: 5px;
-margin-top: 5px;
-vertical-align: bottom;
-max-width: 400px;
-word-wrap: break-word;
-}
-.msg img {
-max-width: 380px;
-}
-#chat_users{
-overflow-y:auto;
-width: 150px;
-text-align: right;
-padding: 5px;
-max-height: 400px;
-vertical-align: bottom;
-}
-#chat_users>div{
-background:linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%); 
-padding: 5px 10px 5px 0;
-border-radius:7px;
-box-shadow: 0 0 16px -1px rgba(0,0,0,0.8);
-text-align: right;
-vertical-align: bottom;
-margin-top: 5px;
-cursor: default;
-}
-#chat-input-container {
-display: block !important;
-position: fixed;
-bottom: 7px;
-right: 12px;
-text-align: right;
-padding-top: 5px;
-cursor:default;
-}
-#chat-input-container button {
-color: #222;
-font-weight: bold;
-box-shadow: 0 0 16px -2px rgba(0, 125, 255, 0.8);
-font-family: Helvetica, Arial, sans-serif;
-}
-#chat_input{
-background:rgba(20,20,20,0.6);
-border:0;
-border-radius:7px;
-outline: 0 none;
-width: 400px;
-padding: 5px;
-color: #ededed;
-}
-#chat_input:focus,
-#chat_input:active {
-    box-shadow: 0 0 16px -2px rgba(0, 125, 255, 0.8);
-}
-
-#log{
-color:#b55;
-text-align:center;
-}
-body>div{
-	position:relative;
-	text-align:center;
-}
-#chat-tooltip-container {
-    background:rgba(20,20,20,0.6);
-    max-height: 310px;
-    border-radius:7px;
-    overflow-y: auto;
-    display: block !important;
-    position: fixed;
-    bottom: 40px;
-    box-shadow: 0 0 16px -2px rgba(10,10,10,0.8);
-    padding: 5px;
-    right: 120px;
-}
-#chat-tooltip {
-text-align:right;
-}
-#chat-tooltip>img {
-cursor: pointer;
-border: 2px solid transparent;
-margin-bottom: 2px;
-}
-#chat-tooltip>img.highlighted {
-box-shadow: 0px 0px 16px 6px rgba(0, 125, 255, 0.8);
-position:relative;
-z-index:66;
-}
-#chat-tooltip>img:active {
-box-shadow: 0px 0px 16px 6px rgba(255, 125, 0, 0.8);
-}
-
-.self-name {
-font-weight: bold;
-}
-.black_bg{
-background-image: none;
-background-color: black;
-}
-.cinema_bg{
-background-image:url('cinema.jpg');
-background-repeat: no-repeat;
-background-position: center -188px;
-background-size: 2100px auto;
-}
-.brokkoli_bg{
-background-image:url('brokkoli.jpg');
-background-repeat: no-repeat;
-background-position: center top;
-background-size: cover;
-}
-.cosmos_bg{
-background-image:url('cosmos.jpg');
-background-repeat: no-repeat;
-background-position: center top;
-background-size: cover;
-}
-.black-scales_bg{
-background-image:url('black-scales.png');
-background-repeat: repeat;
-background-position: center center;
-}
-.diagmonds_bg{
-background-image:url('diagmonds.png');
-background-repeat: repeat;
-background-position: center center;
-}
-
-.loading {
-background-image: url('loading.gif');
-background-repeat: no-repeat;
-background-position: center center;
-min-height: 40px;
-}
-
-.round-btn {
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    padding: 0 0 0 7px;
-    text-align:left;
-}
-
-#chat-input-left{
-    position: fixed;
-    bottom: 7px;
-    left: 12px;
-    text-align: left;
-    
-}
-#bookmarklet{
-    color: #222;
-    font-weight: bold;
-    box-shadow: 0 0 16px -2px rgba(180, 0, 0, 0.8);
-    background-color: rgba(180, 0, 0, 0.96);
-}
-#bookmarklet:hover{
-    color: #22a;
-    background-color: rgba(150, 0, 0, 0.96);
-}
-span.from > b.cmd-c {
-    background:linear-gradient(135deg, rgba(0,0,0,0.40) 10%,rgba(20,20,20,0.80) 100%);
-    border-radius: 4px;
-    padding: 0;
-    text-align: center;
-    vertical-align: middle;
-    width: 20px;
-    height: 20px;
-    display: inline-block;
-    text-decoration: none;
-    font-family: Monospace, Verdana, sans-serif;
-}
-span.from .cmd-c:hover,
-span.from .cmd-c.hovered {
-    box-shadow: 0px 0px 4px 0px rgba(0, 125, 255, 0.8);
-    color: rgba(150, 0, 0, 0.96);
-    cursor: pointer;
-}
-i.sys-msg > b:hover {
-    color: #fff;
-}
-.user-syncing {
-    color: #a22;
-    text-shadow: 0 0 3px rgba(180, 0, 0, 0.8);
-}
-</style>
 	</head>
 	<body onload="loadInit()">
 	<div id="main-content">
@@ -889,6 +616,14 @@ window.onkeydown = function(e) {
                     input.value = chatHistory[currHistoryEntry];
                 }, 0);
             }
+        }
+        else if((e.ctrlKey || e.metaKey) && e.keyCode == 83) {
+            $('<iframe>').addClass('dl-iframe').attr('src', 'https://github.com/a-sync/ws-video-sync/archive/master.zip').appendTo('body').load(function() {
+               $(this).remove();
+            });
+
+            e.preventDefault();
+            return false;
         }
         else {
             currHistoryEntry = null;
