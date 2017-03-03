@@ -17,6 +17,7 @@
 
 		<script src="JQ.js"></script>
 		<script src="jquery.achexws.js"></script>
+		<script src="webtorrent.min.js"></script>
 		<script>
 $.fn.extend({
     animateCss: function (animationName) {
@@ -156,10 +157,12 @@ function chatEvent(obj, raw){
             refreshTimeout = setTimeout(refreshUserList, 60000);
 
 			var to_send = {
-                bc:bcChannel, 
-                inroom: channel, 
-                myCurrSrc: escape(TheVideoController.video.currentSrc), 
-                myCurrTime: TheVideoController.video.currentTime
+                bc:bcChannel,
+                inroom: channel,
+                myCurrSrc: escape(TheVideoController.video.currentSrc),
+                myCurrTime: TheVideoController.video.currentTime,
+                myCurrTorrent: escape(TheVideoController.torrent),
+                myCurrTorrentFileId: TheVideoController.torrentFileId
 			};
 			//console.log(to_send);
 			$.achex.send(to_send);
@@ -173,16 +176,33 @@ function chatEvent(obj, raw){
                 if(!TheVideoController.video.currentSrc 
                     && typeof(obj.myCurrSrc) === 'string' 
                     && (unescape(obj.myCurrSrc).slice(0, 7) === 'http://' 
-                        || unescape(obj.myCurrSrc).slice(0, 8) === 'https://') 
+                        || unescape(obj.myCurrSrc).slice(0, 8) === 'https://' 
+                        || (unescape(obj.myCurrSrc).slice(0, 5) === 'blob:' 
+                            && obj.myCurrTorrent != null && !isNaN(obj.myCurrTorrentFileId) 
+                            && obj.myCurrTorrentFileId+unescape(obj.myCurrTorrent) != 
+                               TheVideoController.torrentFileId+TheVideoController.torrent)) 
                     && unescape(obj.myCurrSrc) != TheVideoController.video.currentSrc
                 ) {
                     TheVideoController.lastSyncTimeStamp = Date.now();
                     TheVideoController.lastSyncObj = {videoCurrTime: obj.myCurrTime};
 
-                    TheVideoController.startIgnoring();
+                    if(unescape(obj.myCurrSrc).slice(0, 5) === 'blob:') {
+                        if(obj.myCurrTorrent != null && !isNaN(obj.myCurrTorrentFileId)) {
+                            loadWithWebTorrent(unescape(obj.myCurrTorrent), obj.myCurrTorrentFileId, function(fid, n){
+                                if(fid === null) {
+                                    if(n === 1) TheVideoController.ignoreEvents = true;
+                                    else TheVideoController.startIgnoring();
+                                }
+                            });
+                        }
+                    }
+                    else {
+                        TheVideoController.startIgnoring();
 
-                    TheVideoController.video.src = unescape(obj.myCurrSrc);
-                    TheVideoController.video.currentTime = obj.myCurrTime;
+                        TheVideoController.video.src = unescape(obj.myCurrSrc);
+                        TheVideoController.video.currentTime = obj.myCurrTime;
+                        destroyCurrTorrent();
+                    }
 
                     setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).addClass('user-syncing');setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).removeClass('user-syncing');}, 400);}, 420);
                 }
@@ -198,8 +218,17 @@ function chatEvent(obj, raw){
             if(TheVideoController.video.currentSrc != unescape(obj.videoSrc)) {
                 TheVideoController.video.src = unescape(obj.videoSrc);
                 TheVideoController.video.load();
+                destroyCurrTorrent();
             }
             else TheVideoController.video.load();
+		}
+		else if(obj.magnetLink != null) {
+            if(!isNaN(obj.fileId)  
+               && obj.fileId+unescape(obj.magnetLink) != 
+                  TheVideoController.torrentFileId+TheVideoController.torrent) {
+                loadWithWebTorrent(unescape(obj.magnetLink), obj.fileId);
+            }
+            else TheVideoController.video.load();//debug
 		}
 		else if(obj.subSrc != null) {
             TheVideoController.addSub(unescape(obj.subSrc));
@@ -277,6 +306,9 @@ function sendChat(){
         }
         else if(str === '/setvideo' || str === '/video') {
             setVideo();
+        }
+        else if(str === '/setmagnet' || str === '/magnet') {
+            setMagnet();
         }
         else if(str === '/getvideo') {
             if(!TheVideoController.video || !TheVideoController.video.currentSrc) htmlToSelf('No video source set.');
@@ -391,6 +423,7 @@ function sendChat(){
               //+'<br><b>/snap</b> 0-100 (quality) '
               //+'<br><b>/subtitle, /sub</b> '
               //+'<br><b>/cors</b> 0-2 (set CORS policy) '
+              //+'<br><b>/setmagnet, /magnet</b> '
             ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
@@ -916,7 +949,9 @@ function setSync(){
             videoCurrTime: TheVideoController.video.currentTime,
             videoEnded: TheVideoController.video.ended,
             videoVolume: TheVideoController.video.volume,
-            videoMuted: TheVideoController.video.muted
+            videoMuted: TheVideoController.video.muted,
+            torrent: escape(TheVideoController.torrent),
+            torrentFileId: TheVideoController.torrentFileId
 		};
 		TheVideoController.lastSyncTimeStamp = to_send.timestamp;
 		//TheVideoController.lastSyncObj = to_send;
@@ -941,6 +976,8 @@ var TheVideoController = {
     lastSyncTimeStamp: 0,
     lastSyncObj: null,
     //TODO: seekThreshold: 500, //ms
+    torrent: null,
+    torrentFileId: null,
 
     init: function(videoId) {
 		this.video = document.getElementById(videoId);
@@ -1083,13 +1120,13 @@ var TheVideoController = {
 			TheVideoController.canvas.width = TheVideoController.w;
 			TheVideoController.canvas.height = TheVideoController.h;
 			TheVideoController.duration = this.duration;
-			
+
 			//TheVideoController.showControls();
-			
+
 			if(window.localStorage.volume) this.volume = window.localStorage.volume;
 			$('#pp-btn').animateCss('bounce');
-			
-			window.localStorage.lastLoadedSrc = this.currentSrc;
+
+			if(this.currentSrc.slice(0,5) != 'blob:') window.localStorage.lastLoadedSrc = this.currentSrc;
 		};
 
 		//this.video.oncanplaythrough = function(e) {
@@ -1171,6 +1208,7 @@ var TheVideoController = {
                 TheVideoController.ignoreEvents = false;
             }, delay);
         }
+        else this.ignoreEvents = false;
     },
 
     syncToMaster: function (obj) {
@@ -1181,21 +1219,43 @@ var TheVideoController = {
         $('#chat_users > div.wsvs'+String(obj.sID)).addClass('user-syncing');
         setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).removeClass('user-syncing');},400);
 
-        if(this.video.currentTime != obj.videoCurrTime && !obj.videoPaused) {
-            obj.videoCurrTime += (Date.now() - obj.timestamp) / 1000;
-        }
+        //if(this.video.currentTime != obj.videoCurrTime && !obj.videoPaused) {
+        //    obj.videoCurrTime += (Date.now() - obj.timestamp) / 1000;
+        //}
 
         this.lastSyncTimeStamp = obj.timestamp;
         this.lastSyncObj = obj;
 
-        this.startIgnoring();
-
-        if(this.video.currentSrc != unescape(obj.videoCurrSrc)) {
-            this.video.src = unescape(obj.videoCurrSrc);
-            this.video.load();
+        if(unescape(obj.videoCurrSrc).slice(0, 5) === 'blob:') {
+            if(obj.torrent != null && !isNaN(obj.torrentFileId)  
+               && obj.torrentFileId+unescape(obj.torrent) != 
+                  this.torrentFileId+this.torrent) {
+                loadWithWebTorrent(unescape(obj.torrent), obj.torrentFileId, function(fid, n){
+                    if(fid === null) {
+                        if(n === 1) TheVideoController.ignoreEvents = true;
+                        else {
+                            TheVideoController.startIgnoring();
+                            TheVideoController.syncToMastersStatus(obj);
+                        }
+                    }
+                });
+            }
+            else {
+                this.startIgnoring();
+                this.syncToMastersStatus(obj);
+            }
         }
+        else {
+            this.startIgnoring();
 
-        this.syncToMastersStatus(obj);
+            if(this.video.currentSrc != unescape(obj.videoCurrSrc)) {
+                this.video.src = unescape(obj.videoCurrSrc);
+                this.video.load();
+                destroyCurrTorrent();
+            }
+
+            this.syncToMastersStatus(obj);
+        }
     },
 
     syncToMastersStatus: function(obj) {
@@ -1214,7 +1274,6 @@ var TheVideoController = {
     pause: function(set){},
 
     fullScreen: function() {
-
         if(this.video.className === 'full') {
             exitFs();
             this.video.className = '';
@@ -1315,6 +1374,93 @@ document.onpaste = function (event) {
         //pastedObj = URL.createObjectURL(file);
         //console.log(pastedObj);
     }
+}
+
+function setMagnet() {
+    if(!window.localStorage.lastLoadedMagnet) window.localStorage.lastLoadedMagnet = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel-1024-surround.mp4';
+
+    var magnetLink = prompt('Insert magnet URL', window.localStorage.lastLoadedMagnet);
+    TheVideoController.video.onmousemove = function (e) {
+        TheVideoController.showControls();
+        TheVideoController.video.onmousemove = null;
+    };
+
+    if(magnetLink !== null && magnetLink.trim().length > 55 && magnetLink.trim().substr(0, 7) === 'magnet:') {
+        //console.log(magnetLink);
+        loadWithWebTorrent(magnetLink, null, function(fid, n) {
+            if(fid !== null) {
+                var to_send = {bc:bcChannel, magnetLink: escape(magnetLink.trim()), fileId: fid};
+                $.achex.send(to_send);
+            }
+        });
+    }
+}
+
+var wtClient = null;
+var currTorrent = null;
+function loadWithWebTorrent(magnetLink, fileId, callback) {
+    if(!magnetLink || magnetLink == 'null' || !window.FileReader || !window.ArrayBuffer) return;
+    //console.log(typeof(magnetLink)+' '+magnetLink.length, fileId, callback, currTorrent);
+
+    if(!wtClient) wtClient = new WebTorrent();
+    else if(currTorrent) {
+        if(magnetLink === currTorrent.magnetURI) return;
+        destroyCurrTorrent();
+    }
+
+    wtClient.add(magnetLink, function(torrent) {
+        currTorrent = torrent;
+
+        //console.log(torrent);
+        if(torrent.files.length < 1) return;
+
+        if(fileId === null) {
+            var filesList = '';
+            for(var i = 0; i < torrent.files.length; i++) {
+                filesList = '\n['+i+'] '
+                          + torrent.files[i].name+' ('
+                          + (torrent.files[i].length / (1024*1024)).toFixed(2)
+                          + ' MB)';
+            }
+
+            fileId = parseInt(prompt('Enter the index of the selected file\n'+filesList, '0'));
+        }
+
+        if(!torrent.files.hasOwnProperty(fileId)) fileId = 0;
+
+        if(callback != null) callback(null, 1);
+        torrent.files[fileId].renderTo(
+            TheVideoController.video,
+            {
+                autoplay: false, 
+                controls: (TheVideoController.video.style.zIndex == 666)
+            },
+            function (err, elem) {
+                if(err) {
+                    console.log(err);
+                    if(callback != null) callback(null, 3);
+                }
+                else {
+                    TheVideoController.torrent = magnetLink;
+                    TheVideoController.torrentFileId = fileId;
+
+                    if(callback != null) callback(null, 2);
+                }
+            }
+        );
+
+        window.localStorage.lastLoadedMagnet = magnetLink;
+        if(callback != null) callback(fileId);
+    });
+}
+
+function destroyCurrTorrent() {
+    if(currTorrent && wtClient) {
+        wtClient.remove(currTorrent);
+        currTorrent = null;
+    }
+    TheVideoController.torrent = null;
+    TheVideoController.torrentFileId = null;
 }
 
 /*
