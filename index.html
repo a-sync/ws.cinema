@@ -179,13 +179,7 @@ function chatEvent(obj, raw){
                     TheVideoController.lastSyncTimeStamp = Date.now();
                     TheVideoController.lastSyncObj = {videoCurrTime: obj.myCurrTime};
 
-                    if(TheVideoController.ignoreDelay > 0) {
-                        TheVideoController.ignoreEvents = true;
-                        if(TheVideoController.ignoreEventsTimer) clearTimeout(TheVideoController.ignoreEventsTimer);
-                        TheVideoController.ignoreEventsTimer = setTimeout(function(){
-                            TheVideoController.ignoreEvents = false;
-                        }, TheVideoController.ignoreDelay);
-                    }
+                    TheVideoController.startIgnoring();
 
                     TheVideoController.video.src = unescape(obj.myCurrSrc);
                     TheVideoController.video.currentTime = obj.myCurrTime;
@@ -202,7 +196,6 @@ function chatEvent(obj, raw){
 		}
 		else if(obj.videoSrc != null) {
             if(TheVideoController.video.currentSrc != unescape(obj.videoSrc)) {
-                var curr = TheVideoController.video.currentSrc;
                 TheVideoController.video.src = unescape(obj.videoSrc);
                 TheVideoController.video.load();
             }
@@ -888,7 +881,7 @@ function setVideo() {
         TheVideoController.video.onmousemove = null;
     };
 
-    if(videoSrc !== null && videoSrc.length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
+    if(videoSrc !== null && videoSrc.trim().length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
         var ytID = videoSrc.trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
         if(ytID != null) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
         //console.log(videoSrc);
@@ -902,7 +895,7 @@ function setSubtitle() {
 
     var subSrc = prompt('Insert subtitle (*.vtt) source URL', window.localStorage.lastLoadedSub);
 
-    if(subSrc !== null && subSrc.length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
+    if(subSrc !== null && subSrc.trim().length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
         var to_send = {bc:bcChannel, subSrc: escape(subSrc.trim())};
         $.achex.send(to_send);
     }
@@ -1166,7 +1159,20 @@ var TheVideoController = {
             //$('.sys-msg:last-child').last().append(this.canvas);
         }
     },
-    
+
+    startIgnoring: function(delay) {
+        if(!delay) delay = this.ignoreDelay;
+
+        if(delay > 0) {
+            this.ignoreEvents = true;
+
+            if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
+            this.ignoreEventsTimer = setTimeout(function(){
+                TheVideoController.ignoreEvents = false;
+            }, delay);
+        }
+    },
+
     syncToMaster: function (obj) {
         if(!obj || this.master || obj.sID == $.achex.sid) return;
         //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
@@ -1182,19 +1188,17 @@ var TheVideoController = {
         this.lastSyncTimeStamp = obj.timestamp;
         this.lastSyncObj = obj;
 
-        if(this.ignoreDelay > 0) {
-            this.ignoreEvents = true;
-            if(this.ignoreEventsTimer) clearTimeout(this.ignoreEventsTimer);
-            this.ignoreEventsTimer = setTimeout(function(){
-                TheVideoController.ignoreEvents = false;
-            }, this.ignoreDelay);
-        }
+        this.startIgnoring();
 
         if(this.video.currentSrc != unescape(obj.videoCurrSrc)) {
             this.video.src = unescape(obj.videoCurrSrc);
             this.video.load();
         }
 
+        this.syncToMastersStatus(obj);
+    },
+
+    syncToMastersStatus: function(obj) {
         if(this.video.paused != obj.videoPaused) {
             if(!obj.videoPaused && this.video.paused) this.pp();
             else if(obj.videoPaused && !this.video.paused) this.pp();
