@@ -935,15 +935,17 @@ function setSubtitle() {
 }
 
 function setSync(){
-	//TODO: make use of TheVideoController.master
 	//console.log('setSync');
 	if(TheVideoController.video){
         $('#chat_users > div.self-name').addClass('user-syncing');
         setTimeout(function(){$('#chat_users > div.self-name').removeClass('user-syncing');},400);
 
+        var ts = Date.now();
+        if(TheVideoController.master) ts += 60 * 60 * 24;
+
 		var to_send = {
             bc:bcChannel, 
-            timestamp: Date.now(),
+            timestamp: ts,
             videoCurrSrc: escape(TheVideoController.video.currentSrc),
             videoPaused: TheVideoController.video.paused, 
             videoCurrTime: TheVideoController.video.currentTime,
@@ -1214,8 +1216,8 @@ var TheVideoController = {
     syncToMaster: function (obj) {
         if(!obj || this.master || obj.sID == $.achex.sid) return;
         //console.log('syncToMaster', this.lastSyncTimeStamp, obj.timestamp);
-        if(!isNaN(this.lastSyncTimeStamp) && obj.timestamp < this.lastSyncTimeStamp) return;
-        
+        if(!isNaN(this.lastSyncTimeStamp) && this.lastSyncTimeStamp > obj.timestamp) return;
+
         $('#chat_users > div.wsvs'+String(obj.sID)).addClass('user-syncing');
         setTimeout(function(){$('#chat_users > div.wsvs'+String(obj.sID)).removeClass('user-syncing');},400);
 
