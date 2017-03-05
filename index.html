@@ -159,9 +159,9 @@ function chatEvent(obj, raw){
 			var to_send = {
                 bc:bcChannel,
                 inroom: channel,
-                myCurrSrc: escape(TheVideoController.video.currentSrc),
+                myCurrSrc: !TheVideoController.video.currentSrc?TheVideoController.video.currentSrc:escape(TheVideoController.video.currentSrc),
                 myCurrTime: TheVideoController.video.currentTime,
-                myCurrTorrent: escape(TheVideoController.torrent),
+                myCurrTorrent: !TheVideoController.torrent?TheVideoController.torrent:escape(TheVideoController.torrent),
                 myCurrTorrentFileId: TheVideoController.torrentFileId
 			};
 			//console.log(to_send);
@@ -946,13 +946,13 @@ function setSync(){
 		var to_send = {
             bc:bcChannel, 
             timestamp: ts,
-            videoCurrSrc: escape(TheVideoController.video.currentSrc),
+            videoCurrSrc: !TheVideoController.video.currentSrc?TheVideoController.video.currentSrc:escape(TheVideoController.video.currentSrc),
             videoPaused: TheVideoController.video.paused, 
             videoCurrTime: TheVideoController.video.currentTime,
             videoEnded: TheVideoController.video.ended,
             videoVolume: TheVideoController.video.volume,
             videoMuted: TheVideoController.video.muted,
-            torrent: escape(TheVideoController.torrent),
+            torrent: !TheVideoController.torrent?TheVideoController.torrent:escape(TheVideoController.torrent),
             torrentFileId: TheVideoController.torrentFileId
 		};
 		TheVideoController.lastSyncTimeStamp = to_send.timestamp;
