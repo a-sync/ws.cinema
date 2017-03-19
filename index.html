@@ -403,6 +403,14 @@ function sendChat(){
                     htmlToSelf('Video CORS policy removed.');
             }
         }
+        else if(str === '/top') {
+            if(TheVideoController.video.style.zIndex != 777) {
+                TheVideoController.video.style.zIndex = 777;
+            }
+            else {
+                TheVideoController.video.style.zIndex = 'auto';
+            }
+        }
         else if(str === '/help' || str === '/man') {
             var cmdCharsList = '<b class="cmd-c hovered">/</b> ';
             for(var i = 0; i < cmdModeChars.length; i++) cmdCharsList += '<b class="cmd-c">'+cmdModeChars[i]+'</b> ';
@@ -424,6 +432,7 @@ function sendChat(){
               //+'<br><b>/subtitle, /sub</b> '
               //+'<br><b>/cors</b> 0-2 (set CORS policy) '
               //+'<br><b>/setmagnet, /magnet</b> '
+              //+'<br><b>/top (toggle video on top)</b> '
             ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
@@ -991,16 +1000,16 @@ var TheVideoController = {
 
     showControls: function() {
         this.video.setAttribute('controls', 'controls');
-        this.video.style.zIndex = 666;
+        if(this.video.style.zIndex != 777) this.video.style.zIndex = 666;
     },
 
     hideControls: function() {
         this.video.removeAttribute('controls');
-        this.video.style.zIndex = 'auto';
+        if(this.video.style.zIndex != 777) this.video.style.zIndex = 'auto';
     },
 
     toggleControls: function() {
-        if(this.video.style.zIndex == 666) this.hideControls();
+        if(this.video.getAttribute('controls') != null) this.hideControls();
         else this.showControls();
     },
 
@@ -1435,7 +1444,7 @@ function loadWithWebTorrent(magnetLink, fileId, callback) {
             TheVideoController.video,
             {
                 autoplay: false, 
-                controls: (TheVideoController.video.style.zIndex == 666)
+                controls: (TheVideoController.video.getAttribute('controls') != null)
             },
             function (err, elem) {
                 if(err) {
