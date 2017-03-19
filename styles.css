@@ -1,6 +1,7 @@
 html{
     background-color: #000;
     color: #ededed;
+    height: 100vh;
 }
 body{
 background: none transparent;
