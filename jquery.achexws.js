@@ -114,7 +114,7 @@ function AchexWs(obj)
 {
     this.dbg = (obj.dbg == 1) ? true:false;
     this.port = (obj.port != null) ? obj.port : 4010;
-    this.reconnect = (obj.reconnect != null) ? obj.reconnect : 4011;
+    this.reconnect = (obj.reconnect != null) ? obj.reconnect : 3000;
 
     this.url = (obj.url != null) ? obj.url : 'ws://www.achex.ca';
 
