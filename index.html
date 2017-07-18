@@ -109,12 +109,12 @@ function oc(e){
 	$.achex.send({cmd:'register_broadcast', bid:bcChannel});
 	refreshUserList();
 
-    htmlToSelf('You joined room <b>'+channel+'</b> <br>', 'Welcome');
 	if(firstRun === true) {
-        htmlToSelf('Sync up with others when someone <br>plays, pauses or seeks the video :) <br>'
-              +'You can list commands with <b>/help</b><br>', 'Welcome');
+        htmlToSelf('Set a hosted video url or <a href="//btorrent.devs.space">magnet uri</a> for the room player,<br>'
+        +'then sync up with others and control the playback together :)<br>', 'Welcome');
         firstRun = false;
     }
+    htmlToSelf('You joined room <b>'+channel+'</b><br>List available commands with <b>/help</b><br>', 'Welcome');
 
     lastUser = null;
 }
@@ -278,6 +278,8 @@ $.achex({
 	opencallback: oc,
 	callback: chatEvent,
 	closecallback: cc
+	//,url: 'wss://www.achex.ca'
+	//,port: 443
 });
 
 var cmdModeChars = [':','?'];
@@ -299,9 +301,11 @@ function sendChat(){
             clearChatWindow();
         }
         else if(str === '/name' || str === '/nick') {
-            username = prompt('Enter Username').replace(/\W+/g, "");
-            window.localStorage.username = username;
-            window.location.reload();
+            username = prompt('Enter Username', username).replace(/\W+/g, '');
+            if (username && window.localStorage.username != username) {
+                window.localStorage.username = username;
+                window.location.reload();
+            }
             //TODO: reauth to server to get new name without reloading
         }
         else if(str === '/setvideo' || str === '/video') {
@@ -310,7 +314,7 @@ function sendChat(){
         else if(str === '/setmagnet' || str === '/magnet') {
             setMagnet();
         }
-        else if(str === '/getvideo') {
+        else if(str === '/getsource') {
             if(!TheVideoController.video || !TheVideoController.video.currentSrc) htmlToSelf('No video source set.');
             else htmlToSelf(esc(TheVideoController.video.currentSrc));
         }
@@ -415,37 +419,33 @@ function sendChat(){
             var cmdCharsList = '<b class="cmd-c hovered">/</b> ';
             for(var i = 0; i < cmdModeChars.length; i++) cmdCharsList += '<b class="cmd-c">'+cmdModeChars[i]+'</b> ';
             lastUser = null;
-            htmlToSelf('<b>/mute</b> '
-                +'<br><b>/unmute</b> '
-                +'<br><b>/m</b> (toggle mute) '
-                +'<br><b>/volume, /v</b> 0-100 (or &#177;int) '
+            htmlToSelf('<b>/name, /nick</b> '
                 +'<br><b>/setbg</b> 0-'+(backgroundCs.length-1)+' '
                 +'<br><b>/setposter</b> 0-'+(posterPs.length-1)+' '
                 +'<br><b>/gif</b> (search via giphy) '
-                +'<br><b>/giflate</b> (translate via giphy) '
                 +'<br><b>/sticker</b> (search via giphy) '
+                +'<br><b>/giflate</b> (translate via giphy) '
                 +'<br><b>/sticklate</b> (translate via giphy) '
-                +'<br><b>/room, /r</b> roomname (switch to room) '
-              //+'<br><b>/sync</b> (broadcast playback properties) '
+                +'<br><b>/sync</b> (broadcast playback info) '
+                +'<br><b>/cors</b> 0-2 (set CORS policy) '
+                +'<br><b>/room, /r</b> (switch to room) '
+                +'<br><b>/snap</b> 0-100 (quality) '
+                +'<br><b>/getsource</b> '
               //+'<br><b>/master</b> '
-              //+'<br><b>/snap</b> 0-100 (quality) '
-              //+'<br><b>/subtitle, /sub</b> '
-              //+'<br><b>/cors</b> 0-2 (set CORS policy) '
-              //+'<br><b>/setmagnet, /magnet</b> '
-              //+'<br><b>/top (toggle video on top)</b> '
             ,' Available commands');
             lastUser = null;
             htmlToSelf('<b>/help, /man</b> '
+                +'<br><b>/fullscreen, /fs</b> '
+                +'<br><b>/top</b> (toggle video on top) '
                 +'<br><b>/cb, /c</b> (toggle control bar) '
                 +'<br><b>/clear, /cls</b> (clear screen) '
-                +'<br><b>/name, /nick</b> '
                 +'<br><b>/setvideo, /video</b> '
-                +'<br><b>/getvideo</b> '
-                +'<br><b>/play</b> '
-                +'<br><b>/pause</b> '
-                +'<br><b>/p</b> (toggle play / pause) '
+                +'<br><b>/setmagnet, /magnet</b> '
+                +'<br><b>/subtitle, /sub</b> '
+                +'<br><b>/play, /pause, /p</b> (toggle play / pause) '
+                +'<br><b>/mute, /unmute, /m</b> (toggle mute) '
+                +'<br><b>/volume, /v</b> 0-100 (or &#177;int) '
                 +'<br><b>/seek, /s</b> m:s (or &#177;int) '
-                +'<br><b>/fullscreen, /fs</b> '
             ,' '+cmdCharsList);
             lastUser = null;
 
@@ -1390,7 +1390,7 @@ document.onpaste = function (event) {
 function setMagnet() {
     if(!window.localStorage.lastLoadedMagnet) window.localStorage.lastLoadedMagnet = 'magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2Fsintel-1024-surround.mp4';
 
-    var magnetLink = prompt('Insert magnet URL', window.localStorage.lastLoadedMagnet);
+    var magnetLink = prompt('Insert magnet URI', window.localStorage.lastLoadedMagnet);
     TheVideoController.video.onmousemove = function (e) {
         TheVideoController.showControls();
         TheVideoController.video.onmousemove = null;
