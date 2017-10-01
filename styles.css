@@ -189,7 +189,7 @@ background-color: black;
 .cinema_bg{
 background-image:url('cinema.jpg');
 background-repeat: no-repeat;
-background-position: center -188px;
+background-position: center top;
 background-size: 2100px auto;
 }
 .brokkoli_bg{
