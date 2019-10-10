@@ -106,7 +106,7 @@ $('#username').html(username);
 
 function oc(e){
 	console.log('connection opened');
-	$.achex.send({cmd:'register_broadcast', bid:bcChannel});
+	$.achex.send({joinHub:bcChannel});
 	refreshUserList();
 
 	if(firstRun === true) {
@@ -133,22 +133,23 @@ function loadInit() {
 }
 
 function cc(){
-	$.achex.send({bc:bcChannel, sleeping: username});
+	$.achex.send({toH:bcChannel, offline: username});
 	console.log('closed');
 }
 
 var refreshTimeout = null;
 var refreshUsersTimeout = null;
 function chatEvent(obj, raw){
-	//logf(raw);
-	//console.log(obj, raw);
-	//var gaga = JSON.parse(raw);
 	if(obj == null) return;
-	if(obj.bc && obj.bc == bcChannel){
+	
+	if(obj.leftHub == bcChannel){
+        users = users.filter(u => u.c != obj.user);
+        showUsers();
+  }else if(obj.toH && obj.toH == bcChannel){
 		if( obj.channel == channel && channel != '' ){
 			// received chat
 			rcvChat(obj);
-		}else if(obj.check != null){
+		}else if(obj.req != null){
             //console.log(obj);
             //if(obj.sID != $.achex.sid && typeof(users[obj.sID]) === 'undefined') htmlToSelf(esc(obj.FROM)+' joined the room');
 
@@ -157,8 +158,8 @@ function chatEvent(obj, raw){
             refreshTimeout = setTimeout(refreshUserList, 60000);
 
 			var to_send = {
-                bc:bcChannel,
-                inroom: channel,
+                toH:bcChannel,
+                inchannel: channel,
                 myCurrSrc: !TheVideoController.video.currentSrc?TheVideoController.video.currentSrc:escape(TheVideoController.video.currentSrc),
                 myCurrTime: TheVideoController.video.currentTime,
                 myCurrTorrent: !TheVideoController.torrent?TheVideoController.torrent:escape(TheVideoController.torrent),
@@ -166,8 +167,8 @@ function chatEvent(obj, raw){
 			};
 			//console.log(to_send);
 			$.achex.send(to_send);
-		}else if(obj.inroom != null){
-            if(obj.inroom == channel){
+		}else if(obj.inchannel != null){
+            if(obj.inchannel == channel){
                 users[obj.sID] = {c:String(obj.FROM)};
 
                 clearTimeout(refreshUsersTimeout);
@@ -245,8 +246,8 @@ function chatEvent(obj, raw){
 		}
 
 	}else if(obj.FROM && obj.FROM != username){
-		if( obj.check == 'ticket'){
-			$.achex.send({bc:bcChannel, inroom: channel});
+		if( obj.req == 'info'){
+			$.achex.send({toH:bcChannel, inchannel: channel});
 		}else{
 			rcvWhisper(obj);
 		}
@@ -278,7 +279,7 @@ $.achex({
 	opencallback: oc,
 	callback: chatEvent,
 	closecallback: cc
-	//,url: 'wss://www.achex.ca'
+	//,url: 'wss://cloud.achex.ca'
 	//,port: 443
 });
 
@@ -375,7 +376,7 @@ function sendChat(){
 
                 TheVideoController.snap(q);
                 if(TheVideoController.snapDataUrl !== null) {
-                    var to_send = {bc:bcChannel, snap: escape(TheVideoController.snapDataUrl) };
+                    var to_send = {toH:bcChannel, snap: escape(TheVideoController.snapDataUrl) };
                     $.achex.send(to_send);
                 }
             }
@@ -476,7 +477,7 @@ function sendChat(){
             }
         }
         else {
-            var to_send = {bc:bcChannel, channel: channel, msg : escape(input.value) };
+            var to_send = {toH:bcChannel, channel: channel, msg : escape(input.value) };
             $.achex.send(to_send);
             //console.log(to_send);
         }
@@ -758,7 +759,7 @@ function esc(str) {
 }
 
 function refreshUserList() {
-    $.achex.send({bc:bcChannel, awake: username, check:'ticket'});
+    $.achex.send({toH:bcChannel, online: username, req:'info'});
 }
 
 function clearChatWindow() {
@@ -904,7 +905,7 @@ function findInSiblings(node, siblings) {
 
 function sendGif(img) {
 	if(img){
-		var to_send = {bc:bcChannel, gif: img.src, width: img.width, height: img.height };
+		var to_send = {toH:bcChannel, gif: img.src, width: img.width, height: img.height };
 		$.achex.send(to_send);
 		
 		destroyGifSearch();
@@ -927,7 +928,7 @@ function setVideo() {
         var ytID = videoSrc.trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
         if(ytID != null) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
         //console.log(videoSrc);
-        var to_send = {bc:bcChannel, videoSrc: escape(videoSrc.trim())};
+        var to_send = {toH:bcChannel, videoSrc: escape(videoSrc.trim())};
         $.achex.send(to_send);
     }
 }
@@ -938,7 +939,7 @@ function setSubtitle() {
     var subSrc = prompt('Insert subtitle (*.vtt) source URL', window.localStorage.lastLoadedSub);
 
     if(subSrc !== null && subSrc.trim().length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
-        var to_send = {bc:bcChannel, subSrc: escape(subSrc.trim())};
+        var to_send = {toH:bcChannel, subSrc: escape(subSrc.trim())};
         $.achex.send(to_send);
     }
 }
@@ -953,7 +954,7 @@ function setSync(){
         if(TheVideoController.master) ts += 60 * 60 * 24;
 
 		var to_send = {
-            bc:bcChannel, 
+            toH:bcChannel, 
             timestamp: ts,
             videoCurrSrc: !TheVideoController.video.currentSrc?TheVideoController.video.currentSrc:escape(TheVideoController.video.currentSrc),
             videoPaused: TheVideoController.video.paused, 
@@ -1187,7 +1188,7 @@ var TheVideoController = {
 		//this.video.onwaiting = function(e) {
             //console.log('onwaiting', this.currentTime, TheVideoController.lastSyncObj);
             //if(channel) {
-            //    var to_send = {bc:bcChannel, channel: channel, msg: escape('Buffering @ '+this.currentTime) };
+            //    var to_send = {toH:bcChannel, channel: channel, msg: escape('Buffering @ '+this.currentTime) };
             //    $.achex.send(to_send);
             //}
 		//};
@@ -1377,7 +1378,7 @@ document.onpaste = function (event) {
         var reader = new FileReader();
         reader.onload = function(event){
             //console.log(event);
-            var to_send = {bc:bcChannel, snap: escape(event.target.result) };
+            var to_send = {toH:bcChannel, snap: escape(event.target.result) };
             $.achex.send(to_send);
         };
         reader.readAsDataURL(blob);
@@ -1400,7 +1401,7 @@ function setMagnet() {
         //console.log(magnetLink);
         loadWithWebTorrent(magnetLink, null, function(fid, n) {
             if(fid !== null) {
-                var to_send = {bc:bcChannel, magnetLink: escape(magnetLink.trim()), fileId: fid};
+                var to_send = {toH:bcChannel, magnetLink: escape(magnetLink.trim()), fileId: fid};
                 $.achex.send(to_send);
             }
         });
