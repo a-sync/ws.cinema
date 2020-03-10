@@ -105,8 +105,10 @@ while(username == ''){
 $('#username').html(username);
 
 function oc(e){
-	console.log('connection opened');
-	$.achex.send({joinHub:bcChannel});
+    console.log('connection opened');
+    users[$.achex.sid] = {c:String($.achex.username)};
+
+    $.achex.send({joinHub:bcChannel});
 	refreshUserList();
 
 	if(firstRun === true) {
@@ -134,18 +136,22 @@ function loadInit() {
 
 function cc(){
 	$.achex.send({toH:bcChannel, offline: username});
-	console.log('closed');
+	console.log('closed');// TODO htmlToSelf notification
 }
 
 var refreshTimeout = null;
 var refreshUsersTimeout = null;
-function chatEvent(obj, raw){
+function chatEvent(obj, raw){ // Notes to update to v2: http://achex.ca/develop/#server_commands
 	if(obj == null) return;
-	
-	if(obj.leftHub == bcChannel){
-        users = users.filter(u => u.c != obj.user);
+    
+    if(obj.ltcy){
+        console.log('LATENCY', obj.ltcy);
+    }else if(obj.joinHub){
+        console.log(obj); 
+    }else if(obj.leftHub == bcChannel){
+        delete users[obj.sID];
         showUsers();
-  }else if(obj.toH && obj.toH == bcChannel){
+    }else if(obj.toH && obj.toH == bcChannel){
 		if( obj.channel == channel && channel != '' ){
 			// received chat
 			rcvChat(obj);
@@ -154,6 +160,12 @@ function chatEvent(obj, raw){
             //if(obj.sID != $.achex.sid && typeof(users[obj.sID]) === 'undefined') htmlToSelf(esc(obj.FROM)+' joined the room');
 
             users = [];
+            users[$.achex.sid] = {c:$.achex.username};
+            if (obj.req === 'info' && obj.sID && obj.online === obj.FROM) {
+                users[obj.sID] = {c:String(obj.FROM)};
+            }
+            showUsers();
+
             clearTimeout(refreshTimeout);
             refreshTimeout = setTimeout(refreshUserList, 60000);
 
@@ -172,7 +184,7 @@ function chatEvent(obj, raw){
                 users[obj.sID] = {c:String(obj.FROM)};
 
                 clearTimeout(refreshUsersTimeout);
-                refreshUsersTimeout = setTimeout(showUsers, 400);
+                refreshUsersTimeout = setTimeout(showUsers, 1000);
 
                 if(!TheVideoController.video.currentSrc 
                     && typeof(obj.myCurrSrc) === 'string' 
@@ -270,7 +282,7 @@ while(!window.localStorage.password) {
 }
 
 $.achex({
-    dbg: 0,
+    //dbg: true,
 	username: username,
 	password:window.localStorage.password||'*',
 	reconnect: 3000,
@@ -279,8 +291,8 @@ $.achex({
 	opencallback: oc,
 	callback: chatEvent,
 	closecallback: cc
-	//,url: 'wss://cloud.achex.ca'
-	//,port: 443
+	//,url: 'wss://cloud.achex.ca' // wss://ws.achex.ca
+	//,port: 443 // 4010
 });
 
 var cmdModeChars = [':','?'];
@@ -378,6 +390,7 @@ function sendChat(){
                 if(TheVideoController.snapDataUrl !== null) {
                     var to_send = {toH:bcChannel, snap: escape(TheVideoController.snapDataUrl) };
                     $.achex.send(to_send);
+                    rcvChat(Object.assign({FROM:$.achex.username, sID:$.achex.sid}, to_send), '<img src="'+TheVideoController.snapDataUrl+'" class="msg-snap loading" onload="this.className=\'msg-snap\'" />');
                 }
             }
             else htmlToSelf('No video loaded...');
@@ -479,6 +492,7 @@ function sendChat(){
         else {
             var to_send = {toH:bcChannel, channel: channel, msg : escape(input.value) };
             $.achex.send(to_send);
+            rcvChat(Object.assign({FROM:$.achex.username, sID:$.achex.sid}, to_send));
             //console.log(to_send);
         }
         addToChatHistory(input.value);
@@ -787,7 +801,7 @@ function giphySearch(endPoint) {
     //todo: load more from offset when scrollbar is at bottom
 
     $.ajax({
-        url: 'http://api.giphy.com/v1/'+endPoint+'limit=100&api_key=dc6zaTOxFJmzC',
+        url: 'https://api.giphy.com/v1/'+endPoint+'limit=100&api_key=dc6zaTOxFJmzC',
         dataType: 'json',
         success: function(gifs){
             if(endPoint === gifSearchLatest) {
@@ -906,8 +920,9 @@ function findInSiblings(node, siblings) {
 function sendGif(img) {
 	if(img){
 		var to_send = {toH:bcChannel, gif: img.src, width: img.width, height: img.height };
-		$.achex.send(to_send);
-		
+        $.achex.send(to_send);
+        rcvChat(Object.assign({FROM:$.achex.username, sID:$.achex.sid}, to_send), '<img width="'+(img.width*2)+'" '+(img.width>190?'':'height="'+(img.height*2)+'"')+' src="'+img.src+'" class="msg-gif loading" onload="this.className=\'msg-gif\'" />');
+
 		destroyGifSearch();
 		addToChatHistory(input.value);
 		currHistoryEntry = null;
@@ -916,7 +931,7 @@ function sendGif(img) {
 }
 
 function setVideo() {
-    if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'http://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_720p_h264.mov';//http://webtorrent.io/torrents/sintel-1024-surround.mp4
+    if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
     var videoSrc = prompt('Insert video source URL', window.localStorage.lastLoadedSrc);
     TheVideoController.video.onmousemove = function (e) {
@@ -926,7 +941,8 @@ function setVideo() {
 
     if(videoSrc !== null && videoSrc.trim().length > 10 && (videoSrc.trim().substr(0, 7) === 'http://' || videoSrc.trim().substr(0, 8) === 'https://')) {
         var ytID = videoSrc.trim().match(/(?:youtube(?:-nocookie)?\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-        if(ytID != null) videoSrc = 'http://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
+        if(ytID != null) return alert('Youtube links are not supported at the moment...');//videoSrc = 'https://www.youtubeinmp4.com/redirect.php?video='+ytID[1];
+        // TODO: fetch video url from https://ymp4.download/?url='+encodeURIComponent('https://www.youtube.com/watch?v='+ytID[1])
         //console.log(videoSrc);
         var to_send = {toH:bcChannel, videoSrc: escape(videoSrc.trim())};
         $.achex.send(to_send);
@@ -1380,6 +1396,7 @@ document.onpaste = function (event) {
             //console.log(event);
             var to_send = {toH:bcChannel, snap: escape(event.target.result) };
             $.achex.send(to_send);
+            rcvChat(Object.assign({FROM:$.achex.username, sID:$.achex.sid}, to_send), '<img src="'+event.target.result+'" class="msg-snap loading" onload="this.className=\'msg-snap\'" />');
         };
         reader.readAsDataURL(blob);
 

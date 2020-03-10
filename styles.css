@@ -159,11 +159,14 @@ body>div{
     position: fixed;
     bottom: 40px;
     box-shadow: 0 0 16px -2px rgba(10,10,10,0.8);
-    padding: 5px;
     right: 120px;
 }
 #chat-tooltip {
 text-align:right;
+padding: 5px;
+}
+#chat-tooltip:empty {
+padding:0;
 }
 #chat-tooltip>img {
 cursor: pointer;
