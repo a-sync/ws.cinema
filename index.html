@@ -106,7 +106,6 @@ $('#username').html(username);
 
 function oc(e){
     console.log('connection opened');
-    users[$.achex.sid] = {c:String($.achex.username)};
 
     $.achex.send({joinHub:bcChannel});
 	refreshUserList();
@@ -147,7 +146,8 @@ function chatEvent(obj, raw){ // Notes to update to v2: http://achex.ca/develop/
     if(obj.ltcy){
         console.log('LATENCY', obj.ltcy);
     }else if(obj.joinHub){
-        console.log(obj); 
+        users[$.achex.sid] = {c:$.achex.username};
+        showUsers();
     }else if(obj.leftHub == bcChannel){
         delete users[obj.sID];
         showUsers();
@@ -159,8 +159,7 @@ function chatEvent(obj, raw){ // Notes to update to v2: http://achex.ca/develop/
             //console.log(obj);
             //if(obj.sID != $.achex.sid && typeof(users[obj.sID]) === 'undefined') htmlToSelf(esc(obj.FROM)+' joined the room');
 
-            users = [];
-            users[$.achex.sid] = {c:$.achex.username};
+            //users = [];
             if (obj.req === 'info' && obj.sID && obj.online === obj.FROM) {
                 users[obj.sID] = {c:String(obj.FROM)};
             }
@@ -946,6 +945,7 @@ function setVideo() {
         //console.log(videoSrc);
         var to_send = {toH:bcChannel, videoSrc: escape(videoSrc.trim())};
         $.achex.send(to_send);
+        chatEvent(to_send);
     }
 }
 
@@ -957,6 +957,7 @@ function setSubtitle() {
     if(subSrc !== null && subSrc.trim().length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
         var to_send = {toH:bcChannel, subSrc: escape(subSrc.trim())};
         $.achex.send(to_send);
+        chatEvent(to_send);
     }
 }
 
@@ -1420,6 +1421,7 @@ function setMagnet() {
             if(fid !== null) {
                 var to_send = {toH:bcChannel, magnetLink: escape(magnetLink.trim()), fileId: fid};
                 $.achex.send(to_send);
+                chatEvent(to_send);
             }
         });
     }
