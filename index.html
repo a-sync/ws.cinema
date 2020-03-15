@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html class="cinema_bg">
 	<head>
-		<title>WebSocket Video Sync</title>
-		<!-- src @ github.com/a-sync/ws-video-sync -->
+		<title>ws.cinema</title>
+		<!-- src @ github.com/a-sync/ws.cinema -->
 
 		<meta name="apple-mobile-web-app-capable" content="yes">
 		<meta name="mobile-web-app-capable" content="yes">
@@ -286,7 +286,6 @@ $.achex({
 	password:window.localStorage.password||'*',
 	reconnect: 3000,
 	logo:{canvas:'logo', size:25},
-	fade: true,
 	opencallback: oc,
 	callback: chatEvent,
 	closecallback: cc
@@ -667,7 +666,7 @@ window.onkeydown = function(e) {
             }
         }
         else if((e.ctrlKey || e.metaKey) && e.keyCode == 83) {
-            $('<iframe>').addClass('dl-iframe').attr('src', 'https://github.com/a-sync/ws-video-sync/archive/master.zip').appendTo('body').load(function() {
+            $('<iframe>').addClass('dl-iframe').attr('src', 'https://github.com/a-sync/ws.cinema/archive/master.zip').appendTo('body').load(function() {
                $(this).remove();
             });
 
