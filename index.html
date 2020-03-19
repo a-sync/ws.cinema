@@ -666,10 +666,11 @@ window.onkeydown = function(e) {
             }
         }
         else if((e.ctrlKey || e.metaKey) && e.keyCode == 83) {
-            $('<iframe>').addClass('dl-iframe').attr('src', 'https://github.com/a-sync/ws.cinema/archive/master.zip').appendTo('body').load(function() {
+            $('<iframe>').addClass('dl-iframe').attr('src', 'https://github.com/a-sync/ws.cinema/archive/master.zip').appendTo('body').on('load',function() {
                $(this).remove();
             });
 
+            e.stopPropagation();
             e.preventDefault();
             return false;
         }
