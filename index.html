@@ -800,7 +800,7 @@ function giphySearch(endPoint) {
     //todo: load more from offset when scrollbar is at bottom
 
     $.ajax({
-        url: 'https://api.giphy.com/v1/'+endPoint+'limit=100&api_key=dc6zaTOxFJmzC',
+        url: 'https://api.giphy.com/v1/'+endPoint+'limit=100&api_key=wMqvSK3gHL65KRyFxTxyrNCUCJbskKtb',
         dataType: 'json',
         success: function(gifs){
             if(endPoint === gifSearchLatest) {
@@ -1143,7 +1143,7 @@ var TheVideoController = {
 
 		//vid.ontimeupdate = function(e) {};
 
-		this.video.onloadedmetadata = function(e) {
+	this.video.onloadedmetadata = function(e) {
             TheVideoController.w = this.videoWidth;
 			TheVideoController.h = this.videoHeight;
 			TheVideoController.canvas.width = TheVideoController.w;
