@@ -3,7 +3,8 @@
 ## Features
 * synchronized video playback for connected clients
 * supports unlimited rooms and clients
-* supports remotely hosted videos, webtorrent magnet links, ~~youtube videos~~
+* supports remotely hosted video files, webtorrent magnet links, ~~youtube videos~~
+  * supports VTT and SRT subtitles
 * cinema mode UI and switchable backgrounds
 * real time chat with multimedia functions
   * supports gifs / stickers

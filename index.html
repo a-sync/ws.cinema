@@ -18,6 +18,7 @@
 		<script src="JQ.js"></script>
 		<script src="jquery.achexws.js"></script>
 		<script src="webtorrent.min.js"></script>
+		<script src="srt-webvtt.js"></script>
 		<script>
 $.fn.extend({
     animateCss: function (animationName) {
@@ -930,7 +931,7 @@ function sendGif(img) {
 }
 
 function setVideo() {
-    if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+    if(!window.localStorage.lastLoadedSrc) window.localStorage.lastLoadedSrc = 'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
 
     var videoSrc = prompt('Insert video source URL', window.localStorage.lastLoadedSrc);
     TheVideoController.video.onmousemove = function (e) {
@@ -950,9 +951,9 @@ function setVideo() {
 }
 
 function setSubtitle() {
-    if(!window.localStorage.lastLoadedSub) window.localStorage.lastLoadedSub = '';
+    if(!window.localStorage.lastLoadedSub) window.localStorage.lastLoadedSub = 'https://cdn.statically.io/gh/PaulaO22/Subtitles/main/big_buck_bunny.eng.srt';
 
-    var subSrc = prompt('Insert subtitle (*.vtt) source URL', window.localStorage.lastLoadedSub);
+    var subSrc = prompt('Insert subtitle (VTT or SRT) source URL', window.localStorage.lastLoadedSub);
 
     if(subSrc !== null && subSrc.trim().length > 10 && (subSrc.trim().substr(0, 7) === 'http://' || subSrc.trim().substr(0, 8) === 'https://')) {
         var to_send = {toH:bcChannel, subSrc: escape(subSrc.trim())};
@@ -1095,17 +1096,33 @@ var TheVideoController = {
         this.setVol(':v -10');
     },
 
-    addSub: function(url, label, lang) {
-        //if(this.video.textTracks.length &&) return;
+    addSub: async function(url, label, lang) {
         window.localStorage.lastLoadedSub = url;
-        
-        var temp = url.split('/');
+        const currentTracks = this.video.querySelectorAll('track');
+        for (const t of currentTracks) {
+            if (t.dataset.src === url) return;
+        }
+        for (const t of currentTracks) {
+            t.default = false;
+        }
+        for (const t of this.video.textTracks) {
+            t.mode = 'hidden';
+        }
 
+        const subRes = await fetch(url);
+        const resText = await subRes.text();
+        let trackUrl;
+        if (resText.startsWith('WEBVTT')) trackUrl = URL.createObjectURL(new Blob([resText], { type: 'text/vtt' }));
+        else trackUrl = await toWebVTT(new Blob([resText]));
+
+        var temp = url.split('/');
         var track = document.createElement('track');
-        track.kind = 'captions';
+        track.default = true;
+        track.kind = 'subtitles';
         track.label = label||temp[temp.length-1];
         track.srclang = lang||'en';
-        track.src = url;
+        track.src = trackUrl;
+        track.dataset.src = url;
         track.onload = function(){
             this.mode = 'showing';
         }
